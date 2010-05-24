@@ -24,7 +24,7 @@
 			$scale = 15;
 		}
 		
-		$ret = fishertest_faster($n11, $n21, $n12, $n22, $scale);
+		$ret = fishertest($n11, $n21, $n12, $n22, $scale);
 		echo "{ \"p\" : \"$ret\" }";
 	}
 ?>

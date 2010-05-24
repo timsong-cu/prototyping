@@ -66,7 +66,7 @@ else{
 </form>
 <?php
 	echo 'By Fisher\'s exact test, <i>p</i>= ';
-	echo fishertest_faster($n11, $n21, $n12, $n22);
+	echo fishertest($n11, $n21, $n12, $n22);
 }
 ?>
 </center>
