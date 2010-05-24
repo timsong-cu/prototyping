@@ -1,0 +1,81 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Fisher's exact test calculator</title>
+<script type="text/javascript">
+
+function computefisher(){
+	// Fairly straightforward - calls fisherapi.php which does the actual computation server-side.
+	var n11 = document.getElementById("n11").value;
+	var n21 = document.getElementById("n21").value;
+	var n12 = document.getElementById("n12").value;
+	var n22 = document.getElementById("n22").value;
+	var scale = document.getElementById("scale").value;
+	
+	var xmlhttp = new XMLHttpRequest();
+
+	xmlhttp.open("POST","fisherapi.php",true); // Async - better response time esp. w/ large numbers
+	xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+	
+	xmlhttp.onreadystatechange=function(){
+		if (xmlhttp.readyState == 4)
+	    {
+		    if(xmlhttp.status==200){
+			    try{ //yep, we got something. Try to parse the result (it's JSON).
+				    var result = JSON.parse(xmlhttp.responseText);
+		    		document.getElementById("FisherResult").innerHTML = 
+			    		"By Fisher's exact test, <i>p</i>= " + result["p"];
+			    }
+			    catch(err){
+				    // Something's wrong.
+			    	document.getElementById("FisherResult").innerHTML = 
+			    		"An error occurred, please try again.";
+			    }
+		    }
+		    else // Something's wrong, too.
+		    	document.getElementById("FisherResult").innerHTML = 
+		    		"An error occurred, please try again.";
+	    }
+		else // We're waiting for the server to compute this thing.
+			document.getElementById("FisherResult").innerHTML = 
+	    		"Please wait...";
+	} 
+
+	// Send it!
+	xmlhttp.send("action=fisher&n11="+ encodeURIComponent(n11)
+			+"&n21="+ encodeURIComponent(n21)
+			+"&n12="+ encodeURIComponent(n12)
+			+"&n22="+ encodeURIComponent(n22)
+			+"&scale="+ encodeURIComponent(scale));
+}
+</script>
+</head>
+
+<body>
+<center>
+<h4>Compute Fisher's exact test on a 2x2 contingency table</h4>
+<table>
+	<tr>
+		<th></th>
+		<th>X<sub>1</sub></th>
+		<th>X<sub>2</sub></th>
+	</tr>
+	<tr>
+		<th>Y<sub>1</sub></th>
+		<td><input type="text" name="n11" id="n11" ></td>
+		<td><input type="text" name="n21" id="n21" ></td>
+	</tr>
+	<tr>
+		<th>Y<sub>2</sub></th>
+		<td><input type="text" name="n12" id="n12" ></td>
+		<td><input type="text" name="n22" id="n22" ></td>
+	</tr>
+</table>
+<label for="scale">Number of digits after decimal place to display: </label>
+<input type="text" name="scale" id="scale" value="15" /> <br />
+<input type="button" value="Calculate using Fisher's exact test" onclick="computefisher()" /><br />
+<div id="FisherResult"></div>
+</center>
+</body>
+</html>
