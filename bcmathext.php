@@ -16,13 +16,15 @@ function bcfact($fact, $scale = 100)
  * @author Thomas Oldbury. 
  * @license Public domain. 
  */ 
-function bcexp($x, $iters = 7, $scale = 100)
+function bcexp($x, $scale = 100)
 {
     /* Compute e^x. */
     $res = bcadd('1.0', $x, $scale);
-    for($i = 0; $i < $iters; $i++)
+    for(;;)
     {
-        $res += bcdiv(bcpow($x, bcadd($i, '2'), $scale), bcfact(bcadd($i, '2'), $scale), $scale);
+       $new = bcadd($res, bcdiv(bcpow($x, bcadd($i, '2'), $scale), bcfact(bcadd($i, '2'), $scale), $scale), $scale);
+	   if(bccomp($res, $new, $scale) == 0) break;
+	   $res = $new;
     }
     return $res;
 }
