@@ -14,7 +14,7 @@ define('PLOT_RANGE_AUTO', '-1');
  * @param $function The name of the function to plot.
  * @param $args Optional arguments to pass to the function. If null, $function(x) is called; otherwise, $function($args, x) is called.
  * @param $xstart The starting point of the plot range, default 0.
- * @param $xend The end point of the plot range. By default, plot 300 steps or until 
+ * @param $xend The end point of the plot range. By default, plot until the curve reached a plateau. In no event will more than 500 points be plotted. 
  * @param $step Distance between two adjacent points.
  * @param $xtitle The title of the X axis.
  * @param $ytitle The title of the Y axis.
@@ -42,10 +42,11 @@ function plot_histogram($function, $args, $width, $height, $xtitle, $ytitle, $ch
 	$graph = new Graph($width, $height);
 	$graph->SetScale('linlin');
 	$graph->Add($barplot);
-	$graph->SetMargin(60,60,60,60);
+	$graph->SetMargin(100,60,60,60);
 	$graph->title->Set($charttitle);
 	$graph->xaxis->title->Set($xtitle);
 	$graph->yaxis->title->Set($ytitle);
+	$graph->yaxis->SetTitleMargin(60);
 	$graph->Stroke();
 }
 
@@ -59,10 +60,11 @@ function plot_line($function, $args, $width, $height, $xtitle, $ytitle, $chartti
 	$graph = new Graph($width, $height);
 	$graph->SetScale('linlin');
 	$graph->Add($lineplot);
-	$graph->SetMargin(60,60,60,60);
+	$graph->SetMargin(100,60,60,60);
 	$graph->title->Set($charttitle);
 	$graph->xaxis->title->Set($xtitle);
 	$graph->yaxis->title->Set($ytitle);
+	$graph->yaxis->SetTitleMargin(60);
 	$graph->Stroke();
 }
 
@@ -79,29 +81,43 @@ function plot_scatter($function, $args, $width, $height, $xtitle, $ytitle, $char
 	$graph = new Graph($width, $height);
 	$graph->SetScale('linlin');
 	$graph->Add($splot);
-	$graph->SetMargin(60,60,60,60);
+	$graph->SetMargin(100,60,60,60);
 	$graph->title->Set($charttitle);
 	$graph->xaxis->title->Set($xtitle);
 	$graph->yaxis->title->Set($ytitle);
+	$graph->yaxis->SetTitleMargin(60);
 	$graph->Stroke();
 }
 
+/**
+ * Prepare the data to plot for a function. This returns up to 500 data points.
+ * @param $function The function to plot
+ * @param $args Optional arguments to pass to the function
+ * @param $xstart Where to start plotting.
+ * @param $xend Where to end plotting. Set PLOT_RANGE_AUTO to end on a plateau.
+ * @param $step The difference between x-coordinates of two adjacent data points.
+ */
 function getdata($function, $args, $xstart, $xend, $step){
 	$datay = array();
 	$datax = array();
+	
 	if($xend == PLOT_RANGE_AUTO){
 		$max = -1;
 		$plateau_count = 0;
 		for($i = 0, $x = $xstart; $i < 500; $i++, $x += $step){
 			if($diff * 1000 < $max)
-				$plateau_count++;
+				$plateau_count++; //must have 4 consecutive data points at about the same value (diff < 0.1$ of max) to terminate.
+			else
+				$plateau_count = 0; //reset if it's not a true plateau.
 			if($plateau_count >= 5) break;
-			if($args == null){
+			
+			if($args === null){
 				$datay[$i] = $function($x);
 			}
 			else{
 				$datay[$i] = $function($args, $x);
 			}
+			
 			if($i == 0){
 				$max = $datay[0];
 				$diff = $max;

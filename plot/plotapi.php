@@ -4,6 +4,7 @@ require_once('../bcmathext.php');
 
 $function = $_REQUEST['function'];
 
+// get width & height; def. 1000.
 $width = $_REQUEST['width'];
 if(!$width) $width = 1000;
 $height = $_REQUEST['height'];
@@ -14,7 +15,7 @@ if($function == "poisson-distribution"){
 	$ytitle = 'P(X=k)';
 	$args = floatval($_REQUEST['lambda']);
 	if($args <= 0) $args = 1;
-	$charttitle = "Poisson distribution given an average of $args read(s)";
+	$charttitle = "Poisson distribution given an average of $args read".(($args > 1) ? "s" : "");
 	$function = "poisson_distribution";
 	plot(PLOT_HISTOGRAM, $function, $args, $width, $height, $xtitle, $ytitle, $charttitle);
 }
@@ -23,7 +24,7 @@ else if($function == "poisson-power"){
 	$ytitle = 'Power to detect variant';
 	$args = intval($_REQUEST['minreads']);
 	if($args <= 0) $args = 1;
-	$charttitle = "Power to detect variant given the requirement of $args read(s)";
+	$charttitle = "Power to detect variant given the requirement of $args read".(($args > 1) ? "s" : "");
 	$function = "poisson_power";
 	plot(PLOT_SCATTER, $function, $args, $width, $height, $xtitle, $ytitle, $charttitle, 1, PLOT_RANGE_AUTO, 0.25);
 }
