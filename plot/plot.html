@@ -1,0 +1,55 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Plotting distribution of depth coverage and power to detect variant </title>
+<script type="text/javascript">
+
+function doplot(){
+	// Fairly straightforward - calls fisherapi.php which does the actual computation server-side.
+	var distribution = document.getElementById("distribution").value;
+	var action = document.getElementById("action").value;
+	var param = document.getElementById("param").value;
+	var url = "plotapi.php?function=" + distribution +"-" + action;
+	if(distribution == "poisson"){
+		if(action == "distribution")
+			url += "&lambda=" + encodeURIComponent(param);
+		else if(action == "power")
+			url += "&minreads=" + encodeURIComponent(param);
+	}
+	document.getElementById("Plot").innerHTML = 
+		'<img src="' + url +'" alt="" />';
+}
+
+function onactionchange(){
+	var distribution = document.getElementById("distribution").value;
+	var action = document.getElementById("action").value;
+	if(distribution == "poisson"){
+		if(action == "distribution"){
+			document.getElementById("paramlabel").innerHTML = "Average number of reads:";
+		}
+		else if(action == "power"){
+			document.getElementById("paramlabel").innerHTML = "Minimum number of reads required:";
+		}
+	}
+}
+</script>
+</head>
+<body>
+<center>
+<h4>Plotting distribution of depth coverage and power to detect variant</h4>
+<label for="distibution">Distribution of depth coverage:</label>
+<select id="distribution" onchange="onactionchange()">
+<option value="poisson" selected="selected">Poisson</option>
+</select><br/>
+<label for="action">Plot:</label><select id="action" onchange="onactionchange()">
+<option value="distribution" selected="selected">distribution of depth coverage</option>
+<option value="power">power to detect variant</option>
+</select><br/>
+<label for="param" id="paramlabel">Average number of reads:</label>
+<input type="text" id="param" /><br/>
+<input type="button" value="Plot" onclick="doplot()" /><br/>
+<div id="Plot"></div>
+</center>
+</body>
+</html>
