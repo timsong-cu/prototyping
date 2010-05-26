@@ -9,28 +9,43 @@ function doplot(){
 	// Fairly straightforward. Plotapi does the actual plotting, as usual.
 	var distribution = document.getElementById("distribution").value;
 	var action = document.getElementById("action").value;
-	var param = document.getElementById("param").value;
+	var param1 = document.getElementById("param1").value;
+	var param2 = document.getElementById("param2").value;
 	var url = "plotapi.php?function=" + distribution +"-" + action;
-	if(distribution == "poisson"){
-		if(action == "distribution")
-			url += "&lambda=" + encodeURIComponent(param);
-		else if(action == "power")
-			url += "&minreads=" + encodeURIComponent(param);
+	if(action == "power"){
+		url += "&minreads=" + encodeURIComponent(param1);
+		if(distribution == "negativebinomial")
+			url += "&size=" + encodeURIComponent(param2);
+	}
+	else if(action == "distribution"){
+		if(distribution == "poisson"){
+			url += "&lambda=" + encodeURIComponent(param1);
+		}
+		else
+			url += "&size=" + encodeURIComponent(param2) + "&mu=" + encodeURIComponent(param1);
 	}
 	document.getElementById("Plot").innerHTML = 
 		'<img src="' + url +'" alt="" />';
+	document.getElementById("Plotlink").innerHTML = 
+		'<a href="' + url + '&action=data' +'">Download data</a>';
 }
 
 function onactionchange(){
 	var distribution = document.getElementById("distribution").value;
 	var action = document.getElementById("action").value;
+	if(action == "distribution"){
+		document.getElementById("param1label").innerHTML = "Average depth-coverage:";
+	}
+	else if(action == "power"){
+		document.getElementById("param1label").innerHTML = "Minimum number of reads required:";
+	}
 	if(distribution == "poisson"){
-		if(action == "distribution"){
-			document.getElementById("paramlabel").innerHTML = "Average number of reads:";
-		}
-		else if(action == "power"){
-			document.getElementById("paramlabel").innerHTML = "Minimum number of reads required:";
-		}
+		document.getElementById("param2label").innerHTML = "";
+		document.getElementById("param2container").style.display="none";
+	}
+	else if(distribution == "negativebinomial"){
+		document.getElementById("param2label").innerHTML = "Dispersion parameter:";
+		document.getElementById("param2container").style.display = "";
 	}
 }
 </script>
@@ -41,15 +56,20 @@ function onactionchange(){
 <label for="distibution">Distribution of depth coverage:</label>
 <select id="distribution" onchange="onactionchange()">
 <option value="poisson" selected="selected">Poisson</option>
+<option value="negativebinomial">Negative binomial</option>
 </select><br/>
 <label for="action">Plot:</label><select id="action" onchange="onactionchange()">
 <option value="distribution" selected="selected">distribution of depth coverage</option>
 <option value="power">power to detect variant</option>
 </select><br/>
-<label for="param" id="paramlabel">Average number of reads:</label>
-<input type="text" id="param" /><br/>
+<label for="param1" id="param1label">Average depth-coverage:</label>
+<input type="text" id="param1" /><br/>
+<div id="param2container" style="display:none">
+<label for="param2" id="param2label"></label>
+<input type="text" id="param2" /><br/></div>
 <input type="button" value="Plot" onclick="doplot()" /><br/>
 <div id="Plot"></div>
+<div id="Plotlink"></div>
 </center>
 </body>
 </html>
