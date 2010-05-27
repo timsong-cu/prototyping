@@ -20,15 +20,20 @@ require_once('../bcmathext.php');
  */
 function fishertest($n11, $n21, $n12, $n22, $scale=15){
 	$ret = "0.0";
-	$minvalue = min(array($n11, $n21, $n12, $n22));
-	if($minvalue == $n11 || $minvalue == $n22){
-		for(; $n11 >= 0 && $n22 >= 0; $n11--, $n21++, $n12++, $n22--){
-			$ret = bcadd($ret, fisher_probability($n11, $n21, $n12, $n22, $scale), $scale);
+	$det = $n11 * ($n12 + $n22) - $n12 * ($n11 + $n21);
+	
+	if($det > 0){ // upper ratio larger than lower, decrement n21/n12 for more extreme cases
+		$minvalue = $n12 > $n21 ? $n21 : $n12;
+		for(; $minvalue >= 0; $n11++, $n21--, $n12--, $n22++, $minvalue--){
+			$prob = fisher_probability($n11, $n21, $n12, $n22, $scale);
+			$ret = bcadd($prob, $ret, $scale);
 		}
 	}
-	else if($minvalue == $n21 || $minvalue == $n12){
-		for(; $n21 >= 0 && $n12 >= 0; $n11++, $n21--, $n12--, $n22++){
-			$ret = bcadd($ret, fisher_probability($n11, $n21, $n12, $n22, $scale), $scale);
+	else{
+		$minvalue = $n11 > $n22 ? $n22 : $n11;
+		for(; $minvalue >= 0; $n11--, $n21++, $n12++, $n22--, $minvalue--){
+			$prob = fisher_probability($n11, $n21, $n12, $n22, $scale);
+			$ret = bcadd($prob, $ret, $scale);
 		}
 	}
 	
