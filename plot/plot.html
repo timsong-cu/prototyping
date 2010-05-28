@@ -9,20 +9,36 @@ function doplot(){
 	// Fairly straightforward. Plotapi does the actual plotting, as usual.
 	var distribution = document.getElementById("distribution").value;
 	var action = document.getElementById("action").value;
-	var param1 = document.getElementById("param1").value;
-	var param2 = document.getElementById("param2").value;
 	var url = "plotapi.php?function=" + distribution +"-" + action;
 	if(action == "power"){
-		url += "&minreads=" + encodeURIComponent(param1);
-		if(distribution == "negativebinomial")
-			url += "&size=" + encodeURIComponent(param2);
+		var minreads = document.getElementById("minreads").value;
+		url += "&minreads=" + encodeURIComponent(minreads);
+		if(distribution == "negativebinomial"){
+			var size = document.getElementById("size").value;
+			url += "&size=" + encodeURIComponent(size);
+		}
 	}
 	else if(action == "distribution"){
+		var average = document.getElementById("average").value;
 		if(distribution == "poisson"){
-			url += "&lambda=" + encodeURIComponent(param1);
+			url += "&lambda=" + encodeURIComponent(average);
 		}
-		else
-			url += "&size=" + encodeURIComponent(param2) + "&mu=" + encodeURIComponent(param1);
+		else if(distribution == "negativebinomial"){
+			var size = document.getElementById("size").value;
+			url += "&size=" + encodeURIComponent(size) + "&mu=" + encodeURIComponent(average);
+		}
+	}
+	else if(action == "design"){
+		var minreads = document.getElementById("minreads").value;
+		var controls = document.getElementById("controls").value;
+		var budget = document.getElementById("budget").value;
+		var cutoff = document.getElementById("cutoff").value;
+		url += "&minreads=" + encodeURIComponent(minreads) + "&controls=" + encodeURIComponent(controls)
+			+ "&cutoff=" + encodeURIComponent(cutoff) + "&budget=" + encodeURIComponent(budget);
+		if(distribution == "negativebinomial"){
+			var size = document.getElementById("size").value;
+			url += "&size=" + encodeURIComponent(size);
+		}
 	}
 	document.getElementById("Plot").innerHTML = 
 		'<img src="' + url +'" alt="" />';
@@ -31,21 +47,39 @@ function doplot(){
 }
 
 function onactionchange(){
-	var distribution = document.getElementById("distribution").value;
 	var action = document.getElementById("action").value;
 	if(action == "distribution"){
-		document.getElementById("param1label").innerHTML = "Average depth-coverage:";
+		document.getElementById("actionparams").innerHTML = 
+			'<label for="average">Average depth-coverage:</label>' + 
+			'<input type="text" id="average" /><br/>';
 	}
 	else if(action == "power"){
-		document.getElementById("param1label").innerHTML = "Minimum number of reads required:";
+		document.getElementById("actionparams").innerHTML = 
+			'<label for="minreads">Minimum number of reads required:</label>' + 
+			'<input type="text" id="minreads" /><br/>';
 	}
+	else if (action == "design"){
+		document.getElementById("actionparams").innerHTML = 
+			'<label for="minreads">Minimum number of reads required:</label>' + 
+			'<input type="text" id="minreads" /><br/>' +
+			'<label for="controls">Number of controls:</label>' + 
+			'<input type="text" id="controls" /><br/>' +
+			'<label for="budget">Budget (amount of sequencing, in units of human genome):</label>' + 
+			'<input type="text" id="budget" /><br/>' +
+			'<label for="budget">Cutoff for p-value: 1E</label>' + 
+			'<input type="text" id="cutoff" size="8"/><br/>';
+	}
+}
+
+function ondistributionchange(){
+	var distribution = document.getElementById("distribution").value;
 	if(distribution == "poisson"){
-		document.getElementById("param2label").innerHTML = "";
-		document.getElementById("param2container").style.display="none";
+		document.getElementById("distributionparams").innerHTML = "";
 	}
 	else if(distribution == "negativebinomial"){
-		document.getElementById("param2label").innerHTML = "Dispersion parameter:";
-		document.getElementById("param2container").style.display = "";
+		document.getElementById("distributionparams").innerHTML = 
+			'<label for="size">Dispersion parameter:</label>' + 
+			'<input type="text" id="size" /><br/>';
 	}
 }
 </script>
@@ -54,19 +88,21 @@ function onactionchange(){
 <center>
 <h4>Plotting distribution of depth coverage and power to detect variant</h4>
 <label for="distibution">Distribution of depth coverage:</label>
-<select id="distribution" onchange="onactionchange()">
+<select id="distribution" onchange="ondistributionchange()">
 <option value="poisson" selected="selected">Poisson</option>
 <option value="negativebinomial">Negative binomial</option>
 </select><br/>
 <label for="action">Plot:</label><select id="action" onchange="onactionchange()">
 <option value="distribution" selected="selected">distribution of depth coverage</option>
 <option value="power">power to detect variant</option>
+<option value="design">number of cases vs. minimum proportion of carriers</option>
 </select><br/>
-<label for="param1" id="param1label">Average depth-coverage:</label>
-<input type="text" id="param1" /><br/>
-<div id="param2container" style="display:none">
-<label for="param2" id="param2label"></label>
-<input type="text" id="param2" /><br/></div>
+<div id="actionparams">
+<label for="average">Average depth-coverage:</label>
+<input type="text" id="average" />
+</div>
+<div id="distributionparams">
+</div><br/>
 <input type="button" value="Plot" onclick="doplot()" /><br/>
 <div id="Plot"></div>
 <div id="Plotlink"></div>

@@ -8,6 +8,7 @@ define('PLOT_HISTOGRAM', '1');
 define('PLOT_LINE', '2');
 define('PLOT_SCATTER', '3');
 define('PLOT_RANGE_AUTO', '-1');
+define('PLOT_DISCARD', '0xFFFF');
 /**
  * Plot a function.
  * @param $type The type of the plot to generate.
@@ -90,7 +91,7 @@ function plot_scatter($function, $args, $width, $height, $xtitle, $ytitle, $char
 }
 
 /**
- * Prepare the data to plot for a function. This returns up to 500 data points.
+ * Prepare the data to plot for a function. This returns up to 1000 data points.
  * @param $function The function to plot
  * @param $args Optional arguments to pass to the function
  * @param $xstart Where to start plotting.
@@ -104,7 +105,7 @@ function getdata($function, $args, $xstart, $xend, $step){
 	if($xend == PLOT_RANGE_AUTO){
 		$max = -1;
 		$plateau_count = 0;
-		for($i = 0, $x = $xstart; $i < 500; $i++, $x += $step){
+		for($i = 0, $x = $xstart; $i < 1000; $i++, $x += $step){
 			if($diff * 1000 < $max)
 				$plateau_count++; //must have 4 consecutive data points at about the same value (diff < 0.1$ of max) to terminate.
 			else
@@ -130,7 +131,7 @@ function getdata($function, $args, $xstart, $xend, $step){
 		}
 	}
 	else {
-		for($i = 0, $x = $xstart; $i < 500 && $x <= $xend; $x += $step){
+		for($i = 0, $x = $xstart; $i < 1000 && $x <= $xend; $i++, $x += $step){
 			if($args == null){
 				$datay[$i] = $function($x);
 			}
@@ -138,6 +139,7 @@ function getdata($function, $args, $xstart, $xend, $step){
 				$datay[$i] = $function($args, $x);
 			}
 			$datax[$i] = $x;
+			if($datay[$i] == PLOT_DISCARD) $i--; //discard this data point. 
 		}
 	}
 	return array($datay, $datax);

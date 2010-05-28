@@ -1,6 +1,6 @@
 <?php
 require_once('plot.php');
-require_once('../bcmathext.php');
+require_once('../fisher/fishercalc.php');
 
 $function = strtolower($_REQUEST['function']);
 $action = $_REQUEST['action'];
@@ -31,7 +31,7 @@ if($calculation == "distribution"){
 	}
 	
 }
-else {
+else if ($calculation == "power"){
 	$xtitle = 'Average number of reads';
 	$ytitle = 'Power to detect variant';
 	if($distribution == "poisson"){
@@ -51,6 +51,43 @@ else {
 		$charttitle = "Power to detect variant\n(Negative binomial, dispersion parameter $size, minimum $minreads read".(($minreads > 1) ? "s)" : ")");		
 	}	
 }
+else if ($calculation == "design"){
+	$xtitle = "Number of cases tested";
+	$ytitle = "Minimum proportion of carriers";
+	$minreads = intval($_REQUEST['minreads']);
+	$cutoff = pow(10, intval($_REQUEST['cutoff']));
+	$budget = intval($_REQUEST['budget']);
+	$controls = intval($_REQUEST['controls']);
+	if($minreads <= 0) $minreads = 1;
+	if($cutoff <= 0 || $cutoff >= 1) $cutoff = "0.000001";
+	if($budget <= 0) $budget = 1000;
+	if($controls <= 0) $controls = 400;
+	if($distribution == "poisson"){
+		$args = array(
+		'minreads' => $minreads,
+		'cutoff' => $cutoff,
+		'budget' => $budget,
+		'controls' => $controls
+		);
+		$charttitle = sprintf("Minimum proportion of variant carriers required\n"
+		. "(Poisson, minimum $minreads read(s), budget $budget,\n $controls controls, cutoff=%f)", $cutoff);		
+	}
+	else if ($distribution == "negativebinomial"){
+		$size = floatval($_REQUEST['size']);
+		if($size <= 0) $size = 1;
+		$args = array(
+		'minreads' => $minreads,
+		'cutoff' => $cutoff,
+		'budget' => $budget,
+		'controls' => $controls,
+		'size' => $size
+		);
+		$charttitle = sprintf("Minimum proportion of variant carriers required\n"
+		. "(Negative binomial, dispersion parameter $size, minimum $minreads read(s),\n".
+		"budget $budget, $controls controls, cutoff=%f)", $cutoff);
+		
+	}
+} 
 
 if($action == 'data'){
 	if($calculation == "distribution"){
@@ -58,6 +95,9 @@ if($action == 'data'){
 	}
 	else if($calculation == "power"){
 		$data = getdata($function, $args, 1, PLOT_RANGE_AUTO, 0.25);
+	}
+	else if($calculation == 'design'){
+		$data = getdata($function, $args, 1, $budget, 1);
 	}
 	$datax = $data[1];
 	$datay = $data[0];
@@ -81,23 +121,16 @@ else { //plotting is default
 	else if($calculation == "power"){
 		plot(PLOT_SCATTER, $function, $args, $width, $height, $xtitle, $ytitle, $charttitle, 1, PLOT_RANGE_AUTO, 0.25);
 	}
+	else if($calculation == "design"){
+		plot(PLOT_SCATTER, $function, $args, $width, $height, $xtitle, $ytitle, $charttitle, 1, $budget, 1);
+	}
 }
 
 function poisson_distribution($lambda, $x){
 	$x = intval($x);
-	// exp(x) is bad for ~x > 35; we do it in steps instead.
-	if($lambda <= 35) 
-		return floatval(bcdiv(bcpow($lambda, $x, 15), bcmul(exp($lambda), bcfact($x), 15), 15));
-	else{
-		$ret = bcdiv(bcpow($lambda, $x, 15), bcmul(exp(35), bcfact($x), 15), 15);
-		$lambda -= 35;
-		while($lambda > 35){
-			$ret = bcdiv($ret, exp(35), 15);
-			$lambda -= 35;
-		}
-		$ret = bcdiv($ret, exp($lambda), 15);
-		return floatval($ret);
-	}
+	// calculate lnprob first.
+	$lnprob = log($lambda) * $x - $lambda - lnfact($x);
+	return exp($lnprob);
 }
 
 function poisson_power($minreads, $lambda){
@@ -111,20 +144,13 @@ function negativebinomial_distribution($args, $x){
 	$size = $args['size'];
 	$mu = $args['mu'];
 	
-	$prob_inv = ($size + $mu) / $size; //use inverse to minimize error
-	$cprob_inv = ($size + $mu) / $mu;
+	$prob = $size / ($size + $mu);
 	
 	// pmf = (Gamma(size + x) / Gamma(size) / x!) * p^size * (1-p)^x
+	// lnpmf = lngamma(size + x) - lngamma(size) - lngamma(x+1)  + size * ln(p) + x* ln(1-p)
 	
-	$ret = "1.0";
-	for($i = 0; $i < $x; $i++){
-		$ret = bcmul($ret, $size+$i, 15);
-	}
-	
-	$denom = bcmul(bcpow($prob_inv, $size, 15), bcpow($cprob_inv, $x, 15), 15);
-	$denom = bcmul($denom, bcfact($x), 15);
-	$ret = bcdiv($ret, $denom, 15);
-	return floatval($ret);
+	$lnpmf = lngamma($size + $x) - lngamma($size) - lnfact($x) + $size * log($prob) + $x * log(1-$prob);
+	return exp($lnpmf);
 }
 
 function negativebinomial_power($args, $mu){
@@ -136,5 +162,45 @@ function negativebinomial_power($args, $mu){
 		$ret -= negativebinomial_distribution(array('size' => $size, 'mu' => $mu), $i);
 	}
 	return $ret;
+}
+
+function poisson_design($args, $count){
+	$minreads = $args['minreads'];
+	$controls = $args['controls'];
+	$budget = $args['budget'];
+	$cutoff = $args['cutoff'];
+	$lambda = $budget / $count;
+	$power = poisson_power($minreads, $lambda);
+	$mincount = get_mincount($controls, $count, $cutoff);
+	if($mincount == -1) return PLOT_DISCARD;
+	return $mincount / ($power * $count);
+}
+
+function negativebinomial_design($args, $count){
+	$minreads = $args['minreads'];
+	$controls = $args['controls'];
+	$budget = $args['budget'];
+	$cutoff = $args['cutoff'];
+	$size = $args['size'];
+	$mu = $budget / $count;
+	$power = negativebinomial_power(array('size' => $size, 'minreads' => $minreads), $mu);
+	$mincount = get_mincount($controls, $count, $cutoff);
+	if($mincount == -1) return PLOT_DISCARD;
+	return $mincount / ($power * $count);
+	
+}
+
+function get_mincount($controls, $total, $cutoff){
+/*
+	Table:
+			var		normal
+	case	$min	$total-$min
+	ctrl.	0		$controls
+*/
+	for($i = $total; $i >= 0; $i--){
+		if(fishertest_fast($i, $total-$i, 0, $controls) > $cutoff)
+			return ($i+1)> $total? -1 : $i+1;
+	}
+	return 0; // should never get here.
 }
 ?>

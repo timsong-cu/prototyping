@@ -73,4 +73,53 @@ function fisher_probability($n11, $n21, $n12, $n22, $scale=15){
 	// the final division
 	return bcdiv($numer, $denom, $scale);
 }
+function fishertest_fast($n11, $n21, $n12, $n22){
+	// faster, but not arbitrary precision.
+	$ret = 0;
+	$det = $n11 * ($n12 + $n22) - $n12 * ($n11 + $n21);
+	
+	if($det > 0){ // upper ratio larger than lower, decrement n21/n12 for more extreme cases
+		$minvalue = $n12 > $n21 ? $n21 : $n12;
+		for(; $minvalue >= 0; $n11++, $n21--, $n12--, $n22++, $minvalue--){
+			$ret += fisher_probability_fast($n11, $n21, $n12, $n22);
+		}
+	}
+	else{
+		$minvalue = $n11 > $n22 ? $n22 : $n11;
+		for(; $minvalue >= 0; $n11--, $n21++, $n12++, $n22--, $minvalue--){
+			$ret += fisher_probability_fast($n11, $n21, $n12, $n22);
+		}
+	}
+	
+	return $ret;
+}
+
+function fisher_probability_fast($n11, $n21, $n12, $n22){
+	$lnprob = lnfact($n11 + $n21) + lnfact($n11 + $n12) + lnfact($n12 + $n22) + lnfact($n21 + $n22)
+	-lnfact($n11 + $n21 + $n12 + $n22) - lnfact($n11) - lnfact($n21) - lnfact($n12) - lnfact($n22);
+	return exp($lnprob);
+}
+
+// Adapted from http://lib.stat.cmu.edu/apstat/245
+// See Lanczos, C. 'A precision approximation of the gamma
+//                    function', J. SIAM Numer. Anal., B, 1, 86-96, 1964.
+function lngamma($n)
+{
+	$temp = 0.9999999999995183;
+	$temp += 676.5203681218835/$n;
+	$temp -= 1259.139216722289/($n+1);
+	$temp += 771.3234287757674/($n+2);
+	$temp -= 176.6150291498386/($n+3);
+	$temp += 12.50734324009056/($n+4);
+	$temp -= 0.1385710331296526/($n+5);
+	$temp += 0.9934937113930748e-05/($n+6);
+	$temp += 0.1659470187408462e-06/($n+7);
+	return (log($temp) - 5.58106146679532777 - $n + ($n - 0.5) * log($n + 6.5));
+}
+
+function lnfact($n){
+	if($n == 0 || $n == 1) return 0;
+	else return lngamma($n + 1);
+}
+ 
 ?>
