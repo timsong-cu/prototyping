@@ -170,10 +170,13 @@ function poisson_design($args, $count){
 	$budget = $args['budget'];
 	$cutoff = $args['cutoff'];
 	$lambda = $budget / $count;
+	$lambda /= 2; // Diploid cell
 	$power = poisson_power($minreads, $lambda);
 	$mincount = get_mincount($controls, $count, $cutoff);
 	if($mincount == -1) return PLOT_DISCARD;
-	return $mincount / ($power * $count);
+	$ret = $mincount / ($power * $count);
+	if($ret > 1) return PLOT_DISCARD;
+	else return $ret;
 }
 
 function negativebinomial_design($args, $count){
@@ -183,10 +186,13 @@ function negativebinomial_design($args, $count){
 	$cutoff = $args['cutoff'];
 	$size = $args['size'];
 	$mu = $budget / $count;
+	$mu /= 2; // diploid cell
 	$power = negativebinomial_power(array('size' => $size, 'minreads' => $minreads), $mu);
 	$mincount = get_mincount($controls, $count, $cutoff);
 	if($mincount == -1) return PLOT_DISCARD;
-	return $mincount / ($power * $count);
+	$ret = $mincount / ($power * $count);
+	if($ret > 1) return PLOT_DISCARD;
+	else return $ret;
 	
 }
 
