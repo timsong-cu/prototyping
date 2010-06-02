@@ -63,4 +63,27 @@ function bcpowx($a, $b, $iters = 25, $scale = 100)
     return bcexp(bcmul($ln, $b, $scale), $iters, $scale);
 }
 
+// Adapted from http://lib.stat.cmu.edu/apstat/245
+// See Lanczos, C. 'A precision approximation of the gamma
+//                    function', J. SIAM Numer. Anal., B, 1, 86-96, 1964.
+function lngamma($n)
+{
+	$temp = 0.9999999999995183;
+	$temp += 676.5203681218835/$n;
+	$temp -= 1259.139216722289/($n+1);
+	$temp += 771.3234287757674/($n+2);
+	$temp -= 176.6150291498386/($n+3);
+	$temp += 12.50734324009056/($n+4);
+	$temp -= 0.1385710331296526/($n+5);
+	$temp += 0.9934937113930748e-05/($n+6);
+	$temp += 0.1659470187408462e-06/($n+7);
+	return (log($temp) - 5.58106146679532777 - $n + ($n - 0.5) * log($n + 6.5));
+}
+
+function lnfact($n){
+	if($n == 0 || $n == 1) return 0;
+	else return lngamma($n + 1);
+}
+ 
+
 ?>

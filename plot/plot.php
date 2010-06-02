@@ -3,12 +3,11 @@ require_once('../jpgraph/jpgraph.php');
 require_once('../jpgraph/jpgraph_bar.php');
 require_once('../jpgraph/jpgraph_line.php');
 require_once('../jpgraph/jpgraph_scatter.php');
+require_once('util.php');
 
 define('PLOT_HISTOGRAM', '1');
 define('PLOT_LINE', '2');
 define('PLOT_SCATTER', '3');
-define('PLOT_RANGE_AUTO', '-1');
-define('PLOT_DISCARD', '0xFFFF');
 define('PLOT_AXIS_AUTO', '0xFFFF');
 /**
  * Plot a function.
@@ -25,9 +24,7 @@ define('PLOT_AXIS_AUTO', '0xFFFF');
  * @param $ymax The maximum value of the Y axis; set to PLOT_AXIS_AUTO to have the maximum automatically determined.
  */
 
-function plot($type, $function, $args = null, $width = 500, $height=500, $xtitle = "", $ytitle = "", $charttitle = "",  
-				$xstart = 0, $xend = PLOT_RANGE_AUTO, $step = 1, $ymin = PLOT_AXIS_AUTO, $ymax = 1){
-	$data = getdata($function, $args, $xstart, $xend, $step);
+function plot($type, $data, $width = 500, $height=500, $xtitle = "", $ytitle = "", $charttitle = "",  $ymin = PLOT_AXIS_AUTO, $ymax = 1){
 	switch($type){
 		case PLOT_HISTOGRAM:
 			plot_histogram($data, $width, $height, $xtitle, $ytitle, $charttitle, $ymin, $ymax);
@@ -124,68 +121,5 @@ function plot_scatter($data, $width, $height, $xtitle, $ytitle, $charttitle, $ym
 	$graph->yaxis->title->Set($ytitle);
 	$graph->yaxis->SetTitleMargin(60);
 	$graph->Stroke();
-}
-
-/**
- * Prepare the data to plot for a function. This returns up to 1000 data points.
- * @param $function The function to plot
- * @param $args Optional arguments to pass to the function
- * @param $xstart Where to start plotting.
- * @param $xend Where to end plotting. Set PLOT_RANGE_AUTO to end on a plateau.
- * @param $step The difference between x-coordinates of two adjacent data points.
- */
-function getdata($function, $args, $xstart, $xend, $step){
-	$datay = array();
-	$datax = array();
-	
-	if($xend == PLOT_RANGE_AUTO){
-		$max = -1;
-		$plateau_count = 0;
-		for($i = 0, $index = 0, $x = $xstart; $i < 1000 && $x <= $xend; $i++, $x += $step){
-			if($diff * 1000 < $max)
-				$plateau_count++; //must have 4 consecutive data points at about the same value (diff < 0.1$ of max) to terminate.
-			else
-				$plateau_count = 0; //reset if it's not a true plateau.
-			if($plateau_count >= 5) break;
-			if($args == null){
-				$result = $function($x);
-			}
-			else{
-				$result = $function($args, $x);
-			}
-			
-			if($result == PLOT_DISCARD)
-				continue;
-			
-			$datax[$index] = $x;
-			$datay[$index] = $result;
-			$index ++; 
-			if($index == 0){
-				$max = $datay[0];
-				$diff = $max;
-			}
-			else{
-				$diff = abs($datay[$index] - $datay[$index-1]);
-				$max = ($max > $datay[$index] ? $max : $datay[$$index]);
-			}
-		}
-	}
-	else {
-		for($i = 0, $index = 0, $x = $xstart; $i < 1000 && $x <= $xend; $i++, $x += $step){
-			if($args == null){
-				$result = $function($x);
-			}
-			else{
-				$result = $function($args, $x);
-			}
-			if($result == PLOT_DISCARD)
-				continue;
-			
-			$datax[$index] = $x;
-			$datay[$index] = $result;
-			$index ++; 
-		}
-	}
-	return array($datay, $datax);
 }
 ?>

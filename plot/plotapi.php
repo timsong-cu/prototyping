@@ -1,6 +1,8 @@
 <?php
 require_once('plot.php');
-require_once('../fisher/fishercalc.php');
+require_once('poisson.php');
+require_once('negativebinomial.php');
+require_once('util.php');
 
 $function = strtolower($_REQUEST['function']);
 $action = $_REQUEST['action'];
@@ -17,6 +19,7 @@ if($calculation == "distribution"){
 		$args = floatval($_REQUEST['lambda']);
 		if($args <= 0) $args = 1;
 		$charttitle = "Depth-coverage distribution\n(Poisson, mean $args)";
+		$params = implode('_', array($function, $args));
 	}
 	else if($distribution == "negativebinomial"){
 		$size = floatval($_REQUEST['size']);
@@ -28,6 +31,7 @@ if($calculation == "distribution"){
 		'mu' => $mu
 		);
 		$charttitle = "Depth-coverage distribution\n(Negative binomial, mean $mu, dispersion parameter $size)";
+		$params = implode('_', array($function, $mu, $size));
 	}
 	
 }
@@ -38,6 +42,7 @@ else if ($calculation == "power"){
 		$args = intval($_REQUEST['minreads']);
 		if($args <= 0) $args = 1;
 		$charttitle = "Power to detect variant\n(Poisson, minimum $args read".(($args > 1) ? "s)" : ")");
+		$params = implode('_', array($function, $args));
 	}
 	else if($distribution == "negativebinomial"){
 		$size = floatval($_REQUEST['size']);
@@ -48,7 +53,8 @@ else if ($calculation == "power"){
 		'size' => $size,
 		'minreads' => $minreads
 		);
-		$charttitle = "Power to detect variant\n(Negative binomial, dispersion parameter $size, minimum $minreads read".(($minreads > 1) ? "s)" : ")");		
+		$charttitle = "Power to detect variant\n(Negative binomial, dispersion parameter $size, minimum $minreads read".(($minreads > 1) ? "s)" : ")");
+		$params = implode('_', array($function, $minreads, $size));		
 	}	
 }
 else if ($calculation == "design"){
@@ -70,7 +76,8 @@ else if ($calculation == "design"){
 		'controls' => $controls
 		);
 		$charttitle = sprintf("Minimum proportion of variant carriers required\n"
-		. "(Poisson, minimum $minreads read(s), budget $budget,\n $controls controls, cutoff=%f)", $cutoff);		
+		. "(Poisson, minimum $minreads read(s), budget $budget,\n $controls controls, cutoff=%f)", $cutoff);
+		$params = implode('_', array($function, $minreads, $cutoff, $budget, $controls));		
 	}
 	else if ($distribution == "negativebinomial"){
 		$size = floatval($_REQUEST['size']);
@@ -85,23 +92,23 @@ else if ($calculation == "design"){
 		$charttitle = sprintf("Minimum proportion of variant carriers required\n"
 		. "(Negative binomial, dispersion parameter $size, minimum $minreads read(s),\n".
 		"budget $budget, $controls controls, cutoff=%f)", $cutoff);
-		
+		$params = implode('_', array($function, $minreads, $cutoff, $budget, $controls, $size));
 	}
 } 
 
+if($calculation == "distribution"){
+	$data = getdata($params, $function, $args, 0, PLOT_RANGE_AUTO, 1);
+}
+else if($calculation == "power"){
+	$data = getdata($params, $function, $args, 1, PLOT_RANGE_AUTO, 0.25);
+}
+else if($calculation == 'design'){
+	$data = getdata($params, $function, $args, 1, $budget, 1);
+}
 if($action == 'data'){
-	if($calculation == "distribution"){
-		$data = getdata($function, $args, 0, PLOT_RANGE_AUTO, 1);
-	}
-	else if($calculation == "power"){
-		$data = getdata($function, $args, 1, PLOT_RANGE_AUTO, 0.25);
-	}
-	else if($calculation == 'design'){
-		$data = getdata($function, $args, 1, $budget, 1);
-	}
+	header("Content-type:text/plain");
 	$datax = $data[1];
 	$datay = $data[0];
-	header("Content-type:text/plain");
 	echo $charttitle."\n".$xtitle."\t".$ytitle."\n";
 	$count = count($datax);
 	for($i = 0; $i < $count; $i++){
@@ -116,97 +123,14 @@ else { //plotting is default
 	if(!$height) $height = 700;
 	
 	if($calculation == "distribution"){
-		plot(PLOT_HISTOGRAM, $function, $args, $width, $height, $xtitle, $ytitle, $charttitle);
+		plot(PLOT_HISTOGRAM, $data, $width, $height, $xtitle, $ytitle, $charttitle);
 	}
 	else if($calculation == "power"){
-		plot(PLOT_SCATTER, $function, $args, $width, $height, $xtitle, $ytitle, $charttitle, 1, PLOT_RANGE_AUTO, 0.25);
+		plot(PLOT_SCATTER, $data, $width, $height, $xtitle, $ytitle, $charttitle);
 	}
 	else if($calculation == "design"){
-		plot(PLOT_SCATTER, $function, $args, $width, $height, $xtitle, $ytitle, $charttitle, 1, $budget, 1);
+		plot(PLOT_SCATTER, $data, $width, $height, $xtitle, $ytitle, $charttitle);
 	}
 }
 
-function poisson_distribution($lambda, $x){
-	$x = intval($x);
-	// calculate lnprob first.
-	$lnprob = log($lambda) * $x - $lambda - lnfact($x);
-	return exp($lnprob);
-}
-
-function poisson_power($minreads, $lambda){
-	$ret = 1.0;
-	for($i = 0; $i < $minreads; $i++)
-		$ret -= poisson_distribution($lambda, $i);
-	return $ret;
-}
-
-function negativebinomial_distribution($args, $x){
-	$size = $args['size'];
-	$mu = $args['mu'];
-	
-	$prob = $size / ($size + $mu);
-	
-	// pmf = (Gamma(size + x) / Gamma(size) / x!) * p^size * (1-p)^x
-	// lnpmf = lngamma(size + x) - lngamma(size) - lngamma(x+1)  + size * ln(p) + x* ln(1-p)
-	
-	$lnpmf = lngamma($size + $x) - lngamma($size) - lnfact($x) + $size * log($prob) + $x * log(1-$prob);
-	return exp($lnpmf);
-}
-
-function negativebinomial_power($args, $mu){
-	// constant dispersion parameter
-	$minreads = $args['minreads'];
-	$size = $args['size'];
-	$ret = 1.0;
-	for($i = 0; $i < $minreads; $i++){
-		$ret -= negativebinomial_distribution(array('size' => $size, 'mu' => $mu), $i);
-	}
-	return $ret;
-}
-
-function poisson_design($args, $count){
-	$minreads = $args['minreads'];
-	$controls = $args['controls'];
-	$budget = $args['budget'];
-	$cutoff = $args['cutoff'];
-	$lambda = $budget / $count;
-	$lambda /= 2; // Diploid cell
-	$power = poisson_power($minreads, $lambda);
-	$mincount = get_mincount($controls, $count, $cutoff);
-	if($mincount == -1) return PLOT_DISCARD;
-	$ret = $mincount / ($power * $count);
-	if($ret > 1) return PLOT_DISCARD;
-	else return $ret;
-}
-
-function negativebinomial_design($args, $count){
-	$minreads = $args['minreads'];
-	$controls = $args['controls'];
-	$budget = $args['budget'];
-	$cutoff = $args['cutoff'];
-	$size = $args['size'];
-	$mu = $budget / $count;
-	$mu /= 2; // diploid cell
-	$power = negativebinomial_power(array('size' => $size, 'minreads' => $minreads), $mu);
-	$mincount = get_mincount($controls, $count, $cutoff);
-	if($mincount == -1) return PLOT_DISCARD;
-	$ret = $mincount / ($power * $count);
-	if($ret > 1) return PLOT_DISCARD;
-	else return $ret;
-	
-}
-
-function get_mincount($controls, $total, $cutoff){
-/*
-	Table:
-			var		normal
-	case	$min	$total-$min
-	ctrl.	0		$controls
-*/
-	for($i = $total; $i >= 0; $i--){
-		if(fishertest_fast($i, $total-$i, 0, $controls) > $cutoff)
-			return ($i+1)> $total? -1 : $i+1;
-	}
-	return 0; // should never get here.
-}
 ?>
