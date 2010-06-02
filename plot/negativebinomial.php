@@ -27,7 +27,7 @@ function negativebinomial_mincarrier($args, $count){
 	extract($args);
 	$mu = $budget / $count;
 	$mu /= 2; // diploid cell
-	$power = negativebinomial_power(compact($size, $minreads), $mu);
+	$power = negativebinomial_power(array('size' => $size, 'minreads' => $minreads), $mu);
 	$mincount = get_mincount($controls, $count, $cutoff);
 	if($mincount == -1) return PLOT_DISCARD;
 	$ret = $mincount / ($power * $count);
@@ -40,7 +40,7 @@ function negativebinomial_power_from_case_frequency($args, $count){
 	extract($args);
 	$mu = $budget / $count;
 	$mu /= 2; // Diploid cell
-	$power = negativebinomial_power(compact($size, $minreads), $mu);
+	$power = negativebinomial_power(array('size' => $size, 'minreads' => $minreads), $mu);
 	$mincount = get_mincount($controls, $count, $cutoff);
 	if($mincount == -1) return PLOT_DISCARD;
 	$ret = 1 - binomial_cdf($count, $frequency * $power, $mincount);
