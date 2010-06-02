@@ -55,7 +55,7 @@ function getdata($params, $function, $args, $xstart, $xend, $step, $nocache = fa
 				$result = $cache[strval($x)];
 			else{
 				$i++;
-				if($args == null){
+				if(!isset($args)){
 					$result = $function($x);
 				}
 				else{
@@ -85,7 +85,7 @@ function getdata($params, $function, $args, $xstart, $xend, $step, $nocache = fa
 				$result = $cache[strval($x)];
 			else{
 				$i++;
-				if($args == null){
+				if(!isset($args)){
 					$result = $function($x);
 				}
 				else{

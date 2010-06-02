@@ -28,10 +28,7 @@ if($calculation == "distribution"){
 		$mu = floatval($_REQUEST['mu']);
 		if($size <= 0) $size = 1;
 		if($mu <= 0) $mu = 1;
-		$args = array(
-		'size' => $size,
-		'mu' => $mu
-		);
+		$args = compact('size', 'mu');
 		$charttitle = "Depth-coverage distribution\n(Negative binomial, mean $mu, dispersion parameter $size)";
 		$params = implode('_', array($function, $mu, $size));
 	}
@@ -51,10 +48,7 @@ else if ($calculation == "power"){
 		$minreads = intval($_REQUEST['minreads']);
 		if($size <= 0) $size = 1;
 		if($minreads <= 0) $minreads = 1;
-		$args = array(
-		'size' => $size,
-		'minreads' => $minreads
-		);
+		$args = compact('size', 'minreads');
 		$charttitle = "Power to detect variant\n(Negative binomial, dispersion parameter $size, minimum $minreads read".(($minreads > 1) ? "s)" : ")");
 		$params = implode('_', array($function, $minreads, $size));		
 	}	
@@ -71,12 +65,7 @@ else if ($calculation == "mincarrier"){
 	if($budget <= 0) $budget = 1000;
 	if($controls <= 0) $controls = 400;
 	if($distribution == "poisson"){
-		$args = array(
-		'minreads' => $minreads,
-		'cutoff' => $cutoff,
-		'budget' => $budget,
-		'controls' => $controls
-		);
+		$args = compact('minreads', 'cutoff', 'budget', 'controls');
 		$charttitle = sprintf("Minimum proportion of variant carriers required\n"
 		. "(Poisson, minimum $minreads read(s), budget $budget,\n $controls controls, cutoff=%f)", $cutoff);
 		$params = implode('_', array($function, $minreads, $cutoff, $budget, $controls));		
@@ -84,13 +73,7 @@ else if ($calculation == "mincarrier"){
 	else if ($distribution == "negativebinomial"){
 		$size = floatval($_REQUEST['size']);
 		if($size <= 0) $size = 1;
-		$args = array(
-		'minreads' => $minreads,
-		'cutoff' => $cutoff,
-		'budget' => $budget,
-		'controls' => $controls,
-		'size' => $size
-		);
+		$args = compact('minreads', 'cutoff', 'budget', 'controls', 'size');
 		$charttitle = sprintf("Minimum proportion of variant carriers required\n"
 		. "(Negative binomial, dispersion parameter $size, minimum $minreads read(s),\n".
 		"budget $budget, $controls controls, cutoff=%f)", $cutoff);
@@ -112,12 +95,7 @@ else if ($calculation == "power_from_case_frequency"){
 	if($controls <= 0) $controls = 400;
 	$freq = array_combine($freq, $freq);
 	if($distribution == "poisson"){
-		$args = array(
-		'minreads' => $minreads,
-		'cutoff' => $cutoff,
-		'budget' => $budget,
-		'controls' => $controls
-		);
+		$args = compact('minreads', 'cutoff', 'budget', 'controls');
 		$charttitle = sprintf("Power of experiment\n"
 		. "(Poisson, minimum $minreads read(s),\n"
 		. "budget $budget, $controls controls, cutoff=%f,\ncalculated from frequency of variant in cases)", $cutoff);
@@ -126,13 +104,7 @@ else if ($calculation == "power_from_case_frequency"){
 	else if ($distribution == "negativebinomial"){
 		$size = floatval($_REQUEST['size']);
 		if($size <= 0) $size = 1;
-		$args = array(
-		'minreads' => $minreads,
-		'cutoff' => $cutoff,
-		'budget' => $budget,
-		'controls' => $controls,
-		'size' => $size
-		);
+		$args = compact('minreads', 'cutoff', 'budget', 'controls', 'size');
 		$charttitle = sprintf("Power of experiment\n"
 		. "(Negative binomial, dispersion parameter $size, minimum $minreads read(s),\n"
 		. "budget $budget, $controls controls, cutoff=%f,\ncalculated from frequency of variant in cases)", $cutoff);
@@ -157,12 +129,7 @@ else if ($calculation == "power_from_control_frequency"){
 		$freqcases[strval($frequency)] = ($oddsratio * $frequency / (1-$frequency)) / (1+($oddsratio * $frequency / (1-$frequency)));
 	}
 	if($distribution == "poisson"){
-		$args = array(
-		'minreads' => $minreads,
-		'cutoff' => $cutoff,
-		'budget' => $budget,
-		'controls' => $controls
-		);
+		$args = compact('minreads', 'cutoff', 'budget', 'controls');
 		$function = "poisson_power_from_case_frequency";
 		$calculation = "power_from_case_frequency";
 		$charttitle = sprintf("Power of experiment\n"
@@ -173,13 +140,7 @@ else if ($calculation == "power_from_control_frequency"){
 	else if ($distribution == "negativebinomial"){
 		$size = floatval($_REQUEST['size']);
 		if($size <= 0) $size = 1;
-		$args = array(
-		'minreads' => $minreads,
-		'cutoff' => $cutoff,
-		'budget' => $budget,
-		'controls' => $controls,
-		'size' => $size
-		);
+		$args = compact('minreads', 'cutoff', 'budget', 'controls', 'size');
 		$function = "negativebinomial_power_from_case_frequency";
 		$calculation = "power_from_case_frequency";
 		$charttitle = sprintf("Power of experiment\n"
