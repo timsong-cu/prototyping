@@ -16,11 +16,8 @@ function poisson_power($minreads, $lambda){
 	return $ret;
 }
 
-function poisson_design($args, $count){
-	$minreads = $args['minreads'];
-	$controls = $args['controls'];
-	$budget = $args['budget'];
-	$cutoff = $args['cutoff'];
+function poisson_mincarrier($args, $count){
+	extract($args);
 	$lambda = $budget / $count;
 	$lambda /= 2; // Diploid cell
 	$power = poisson_power($minreads, $lambda);
@@ -29,5 +26,16 @@ function poisson_design($args, $count){
 	$ret = $mincount / ($power * $count);
 	if($ret > 1) return PLOT_DISCARD;
 	else return $ret;
+}
+
+function poisson_power_from_case_frequency($args, $count){
+	extract($args);
+	$lambda = $budget / $count;
+	$lambda /= 2; // Diploid cell
+	$power = poisson_power($minreads, $lambda);
+	$mincount = get_mincount($controls, $count, $cutoff);
+	if($mincount == -1) return PLOT_DISCARD;
+	$ret = 1 - binomial_cdf($count, $frequency * $power, $mincount);
+	return $ret >= 0? $ret : 0;
 }
 ?>

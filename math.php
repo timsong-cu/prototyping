@@ -84,6 +84,18 @@ function lnfact($n){
 	if($n == 0 || $n == 1) return 0;
 	else return lngamma($n + 1);
 }
- 
+
+function binomial_pmf($n, $p, $k){
+	$lnpmf = lngamma($n+1) - lngamma($k+1) - lngamma($n-$k+1)
+			 + $k * log($p) + ($n-$k) * log(1-$p);
+	return exp($lnpmf);
+}
+
+function binomial_cdf($n, $p, $k){
+	$ret = 0;
+	for($i = 0; $i <= $k; $i++)
+		$ret += binomial_pmf($n, $p, $i);
+	return $ret;
+}
 
 ?>

@@ -10,6 +10,8 @@ function doplot(){
 	var distribution = document.getElementById("distribution").value;
 	var action = document.getElementById("action").value;
 	var url = "plotapi.php?function=" + distribution +"-" + action;
+	var from = document.getElementById("from").value;
+	var to = document.getElementById("to").value;
 	if(action == "power"){
 		var minreads = document.getElementById("minreads").value;
 		url += "&minreads=" + encodeURIComponent(minreads);
@@ -28,7 +30,7 @@ function doplot(){
 			url += "&size=" + encodeURIComponent(size) + "&mu=" + encodeURIComponent(average);
 		}
 	}
-	else if(action == "design"){
+	else if(action == "mincarrier"){
 		var minreads = document.getElementById("minreads").value;
 		var controls = document.getElementById("controls").value;
 		var budget = document.getElementById("budget").value;
@@ -40,6 +42,40 @@ function doplot(){
 			url += "&size=" + encodeURIComponent(size);
 		}
 	}
+	else if(action == "power-from-case-frequency"){
+		var minreads = document.getElementById("minreads").value;
+		var controls = document.getElementById("controls").value;
+		var budget = document.getElementById("budget").value;
+		var cutoff = document.getElementById("cutoff").value;
+		var frequency = document.getElementById("frequency").value;
+		url += "&minreads=" + encodeURIComponent(minreads) + "&controls=" + encodeURIComponent(controls)
+			+ "&cutoff=" + encodeURIComponent(cutoff) + "&budget=" + encodeURIComponent(budget);
+		url += "&frequency=" + encodeURIComponent(frequency);
+		if(distribution == "negativebinomial"){
+			var size = document.getElementById("size").value;
+			url += "&size=" + encodeURIComponent(size);
+		}
+	}
+	else if(action == "power-from-control-frequency"){
+		var minreads = document.getElementById("minreads").value;
+		var controls = document.getElementById("controls").value;
+		var budget = document.getElementById("budget").value;
+		var cutoff = document.getElementById("cutoff").value;
+		var frequency = document.getElementById("frequency").value;
+		var oddsratio = document.getElementById("oddsratio").value;
+		url += "&minreads=" + encodeURIComponent(minreads) + "&controls=" + encodeURIComponent(controls)
+			+ "&cutoff=" + encodeURIComponent(cutoff) + "&budget=" + encodeURIComponent(budget);
+		url += "&frequency=" + encodeURIComponent(frequency) + "&oddsratio=" + oddsratio;
+		if(distribution == "negativebinomial"){
+			var size = document.getElementById("size").value;
+			url += "&size=" + encodeURIComponent(size);
+		}
+	}
+	if(from != "")
+		url+= "&from=" + encodeURIComponent(from);
+	if(to != "")
+		url+= "&to=" + encodeURIComponent(to);
+	
 	document.getElementById("Plot").innerHTML = 
 		'<img src="' + url +'" alt="" />';
 	document.getElementById("Plotlink").innerHTML = 
@@ -58,7 +94,7 @@ function onactionchange(){
 			'<label for="minreads">Minimum number of reads required:</label>' + 
 			'<input type="text" id="minreads" /><br/>';
 	}
-	else if (action == "design"){
+	else if (action == "mincarrier"){
 		document.getElementById("actionparams").innerHTML = 
 			'<label for="minreads">Minimum number of reads required:</label>' + 
 			'<input type="text" id="minreads" /><br/>' +
@@ -66,8 +102,36 @@ function onactionchange(){
 			'<input type="text" id="controls" /><br/>' +
 			'<label for="budget">Budget (amount of sequencing, in units of human genome):</label>' + 
 			'<input type="text" id="budget" /><br/>' +
-			'<label for="budget">Cutoff for p-value: 1E</label>' + 
+			'<label for="cutoff">Cutoff for p-value: 1E</label>' + 
 			'<input type="text" id="cutoff" size="8"/><br/>';
+	}
+	else if (action == "power-from-case-frequency"){
+		document.getElementById("actionparams").innerHTML = 
+			'<label for="minreads">Minimum number of reads required:</label>' + 
+			'<input type="text" id="minreads" /><br/>' +
+			'<label for="controls">Number of controls:</label>' + 
+			'<input type="text" id="controls" /><br/>' +
+			'<label for="budget">Budget (amount of sequencing, in units of human genome):</label>' + 
+			'<input type="text" id="budget" /><br/>' +
+			'<label for="cutoff">Cutoff for p-value: 1E</label>' + 
+			'<input type="text" id="cutoff" size="8"/><br/>' +
+			'<label for="frequency">Frequency of variant in cases (if more than one, separate by space or comma):</label>' + 
+			'<input type="text" id="frequency"/><br/>';
+	}
+	else if (action == "power-from-control-frequency"){
+		document.getElementById("actionparams").innerHTML = 
+			'<label for="minreads">Minimum number of reads required:</label>' + 
+			'<input type="text" id="minreads" /><br/>' +
+			'<label for="controls">Number of controls:</label>' + 
+			'<input type="text" id="controls" /><br/>' +
+			'<label for="budget">Budget (amount of sequencing, in units of human genome):</label>' + 
+			'<input type="text" id="budget" /><br/>' +
+			'<label for="cutoff">Cutoff for p-value: 1E</label>' + 
+			'<input type="text" id="cutoff" size="8"/><br/>' +
+			'<label for="frequency">Frequency of variant in controls (if more than one, separate by space or comma):</label>' + 
+			'<input type="text" id="frequency"/><br/>' +
+			'<label for="oddsratio">Odds ratio:</label>' + 
+			'<input type="text" id="oddsratio"/><br/>';
 	}
 }
 
@@ -95,7 +159,9 @@ function ondistributionchange(){
 <label for="action">Plot:</label><select id="action" onchange="onactionchange()">
 <option value="distribution" selected="selected">distribution of depth coverage</option>
 <option value="power">power to detect variant</option>
-<option value="design">number of cases vs. minimum proportion of carriers</option>
+<option value="mincarrier">number of cases vs. minimum proportion of carriers</option>
+<option value="power-from-case-frequency">number of cases vs. power, given frequency of variant in cases</option>
+<option value="power-from-control-frequency">number of cases vs. power, given frequency of variant in controls and odds ratio</option>
 </select><br/>
 <div id="actionparams">
 <label for="average">Average depth-coverage:</label>
@@ -103,6 +169,8 @@ function ondistributionchange(){
 </div>
 <div id="distributionparams">
 </div><br/>
+<label for="from">Plot from: </label><input type="text" id="from" size="6" />
+<label for="to"> to </label><input type="text" id="to" size="6"/>
 <input type="button" value="Plot" onclick="doplot()" /><br/>
 <div id="Plot"></div>
 <div id="Plotlink"></div>
