@@ -25,7 +25,7 @@ define('PLOT_AXIS_AUTO', '0xFFFF');
  * @param $ymax The maximum value of the Y axis; set to PLOT_AXIS_AUTO to have the maximum automatically determined.
  */
 
-function plot($type, $data, $width = 500, $height=500, $xtitle = "", $ytitle = "", $charttitle = "",  $ymin = PLOT_AXIS_AUTO, $ymax = 1){
+function plot($type, $data, $width = 500, $height=500, $xtitle = "", $ytitle = "", $charttitle = "",  $ymin = PLOT_AXIS_AUTO, $ymax = PLOT_AXIS_AUTO){
 	switch($type){
 		case PLOT_HISTOGRAM:
 			plot_histogram($data, $width, $height, $xtitle, $ytitle, $charttitle, $ymin, $ymax);

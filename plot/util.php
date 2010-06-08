@@ -11,11 +11,23 @@ function get_mincount($controls, $total, $cutoff){
 	case	$min	$total-$min
 	ctrl.	0		$controls
 */
-	for($i = $total; $i >= 0; $i--){
-		if(fishertest_fast($i, $total-$i, 0, $controls) > $cutoff)
-			return ($i+1)> $total? -1 : $i+1;
+	for($start = 0, $end = $total, $cur = intval(round(($start+$end)/2)), $found=0;
+		!$found;){
+		if(fishertest_fast($cur, $total-$cur, 0, $controls) > $cutoff){
+			$start = $cur + 1;
+			$cur = intval(round(($start+$end)/2));
+		}
+		else{
+			$prev = $cur - 1;
+			if(fishertest_fast($prev, $total-$prev, 0, $controls) > $cutoff)
+				$found = true;
+			else {
+				$end = $cur - 1;
+				$cur = intval(round(($start+$end)/2));
+			}
+		}
 	}
-	return 0; // should never get here.
+	return ($cur > $total) ? -1 : $cur;
 }
 
 /**

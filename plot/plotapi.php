@@ -1,7 +1,6 @@
 <?php
 require_once('plot.php');
-require_once('poisson.php');
-require_once('negativebinomial.php');
+require_once('plottingfunctions.php');
 require_once('util.php');
 
 $function = strtolower($_REQUEST['function']);
@@ -18,37 +17,37 @@ if($calculation == "distribution"){
 	$xtitle = 'Depth-coverage(x)';
 	$ytitle = 'Proportion';
 	if($distribution == "poisson"){
-		$args = floatval($_REQUEST['lambda']);
-		if($args <= 0) $args = 1;
-		$charttitle = "Depth-coverage distribution\n(Poisson, mean $args)";
-		$params = implode('_', array($function, $args));
+		$mean = floatval($_REQUEST['lambda']);
+		if($mean <= 0) $args = 1;
+		$charttitle = "Depth-coverage distribution\n(Poisson, mean $mean)";
+		$params = implode('_', array($function, $mean));
+		$args = compact('mean', 'distribution');
 	}
 	else if($distribution == "negativebinomial"){
 		$size = floatval($_REQUEST['size']);
-		$mu = floatval($_REQUEST['mu']);
+		$mean = floatval($_REQUEST['mu']);
 		if($size <= 0) $size = 1;
-		if($mu <= 0) $mu = 1;
-		$args = compact('size', 'mu');
-		$charttitle = "Depth-coverage distribution\n(Negative binomial, mean $mu, dispersion parameter $size)";
-		$params = implode('_', array($function, $mu, $size));
+		if($mean <= 0) $mean = 1;
+		$args = compact('size', 'mu', 'distribution');
+		$charttitle = "Depth-coverage distribution\n(Negative binomial, mean $mean, dispersion parameter $size)";
+		$params = implode('_', array($function, $mean, $size));
 	}
 	
 }
 else if ($calculation == "power"){
 	$xtitle = 'Average number of reads';
 	$ytitle = 'Power to detect variant';
+	$minreads = intval($_REQUEST['minreads']);
+	if($minreads <= 0) $args = 1;
 	if($distribution == "poisson"){
-		$args = intval($_REQUEST['minreads']);
-		if($args <= 0) $args = 1;
-		$charttitle = "Power to detect variant\n(Poisson, minimum $args read".(($args > 1) ? "s)" : ")");
-		$params = implode('_', array($function, $args));
+		$charttitle = "Power to detect variant\n(Poisson, minimum $minreads read".(($minreads > 1) ? "s)" : ")");
+		$params = implode('_', array($function, $minreads));
+		$args = compact('minreads', 'distribution');
 	}
 	else if($distribution == "negativebinomial"){
 		$size = floatval($_REQUEST['size']);
-		$minreads = intval($_REQUEST['minreads']);
 		if($size <= 0) $size = 1;
-		if($minreads <= 0) $minreads = 1;
-		$args = compact('size', 'minreads');
+		$args = compact('size', 'minreads', 'distribution');
 		$charttitle = "Power to detect variant\n(Negative binomial, dispersion parameter $size, minimum $minreads read".(($minreads > 1) ? "s)" : ")");
 		$params = implode('_', array($function, $minreads, $size));		
 	}	
@@ -65,7 +64,7 @@ else if ($calculation == "mincarrier"){
 	if($budget <= 0) $budget = 1000;
 	if($controls <= 0) $controls = 400;
 	if($distribution == "poisson"){
-		$args = compact('minreads', 'cutoff', 'budget', 'controls');
+		$args = compact('minreads', 'cutoff', 'budget', 'controls', 'distribution');
 		$charttitle = sprintf("Minimum proportion of variant carriers required\n"
 		. "(Poisson, minimum $minreads read(s), budget $budget,\n $controls controls, cutoff=%f)", $cutoff);
 		$params = implode('_', array($function, $minreads, $cutoff, $budget, $controls));		
@@ -73,7 +72,7 @@ else if ($calculation == "mincarrier"){
 	else if ($distribution == "negativebinomial"){
 		$size = floatval($_REQUEST['size']);
 		if($size <= 0) $size = 1;
-		$args = compact('minreads', 'cutoff', 'budget', 'controls', 'size');
+		$args = compact('minreads', 'cutoff', 'budget', 'controls', 'size', 'distribution');
 		$charttitle = sprintf("Minimum proportion of variant carriers required\n"
 		. "(Negative binomial, dispersion parameter $size, minimum $minreads read(s),\n".
 		"budget $budget, $controls controls, cutoff=%f)", $cutoff);
@@ -95,7 +94,7 @@ else if ($calculation == "power_from_case_frequency"){
 	if($controls <= 0) $controls = 400;
 	$freq = array_combine($freq, $freq);
 	if($distribution == "poisson"){
-		$args = compact('minreads', 'cutoff', 'budget', 'controls');
+		$args = compact('minreads', 'cutoff', 'budget', 'controls', 'distribution');
 		$charttitle = sprintf("Power of experiment\n"
 		. "(Poisson, minimum $minreads read(s),\n"
 		. "budget $budget, $controls controls, cutoff=%f,\ncalculated from frequency of variant in cases)", $cutoff);
@@ -104,7 +103,7 @@ else if ($calculation == "power_from_case_frequency"){
 	else if ($distribution == "negativebinomial"){
 		$size = floatval($_REQUEST['size']);
 		if($size <= 0) $size = 1;
-		$args = compact('minreads', 'cutoff', 'budget', 'controls', 'size');
+		$args = compact('minreads', 'cutoff', 'budget', 'controls', 'size', 'distribution');
 		$charttitle = sprintf("Power of experiment\n"
 		. "(Negative binomial, dispersion parameter $size, minimum $minreads read(s),\n"
 		. "budget $budget, $controls controls, cutoff=%f,\ncalculated from frequency of variant in cases)", $cutoff);
@@ -129,7 +128,7 @@ else if ($calculation == "power_from_control_frequency"){
 		$freqcases[strval($frequency)] = ($oddsratio * $frequency / (1-$frequency)) / (1+($oddsratio * $frequency / (1-$frequency)));
 	}
 	if($distribution == "poisson"){
-		$args = compact('minreads', 'cutoff', 'budget', 'controls');
+		$args = compact('minreads', 'cutoff', 'budget', 'controls', 'distribution');
 		$function = "poisson_power_from_case_frequency";
 		$calculation = "power_from_case_frequency";
 		$charttitle = sprintf("Power of experiment\n"
@@ -140,7 +139,7 @@ else if ($calculation == "power_from_control_frequency"){
 	else if ($distribution == "negativebinomial"){
 		$size = floatval($_REQUEST['size']);
 		if($size <= 0) $size = 1;
-		$args = compact('minreads', 'cutoff', 'budget', 'controls', 'size');
+		$args = compact('minreads', 'cutoff', 'budget', 'controls', 'size', 'distribution');
 		$function = "negativebinomial_power_from_case_frequency";
 		$calculation = "power_from_case_frequency";
 		$charttitle = sprintf("Power of experiment\n"
@@ -150,6 +149,7 @@ else if ($calculation == "power_from_control_frequency"){
 	}
 	$freq = $freqcases;
 }
+$function = $calculation;
 
 if($calculation == "distribution"){
 	$xstart = intval($from > 0 ? $from : 0);
