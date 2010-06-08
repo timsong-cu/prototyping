@@ -28,7 +28,7 @@ if($calculation == "distribution"){
 		$mean = floatval($_REQUEST['mu']);
 		if($size <= 0) $size = 1;
 		if($mean <= 0) $mean = 1;
-		$args = compact('size', 'mu', 'distribution');
+		$args = compact('size', 'mean', 'distribution');
 		$charttitle = "Depth-coverage distribution\n(Negative binomial, mean $mean, dispersion parameter $size)";
 		$params = implode('_', array($function, $mean, $size));
 	}

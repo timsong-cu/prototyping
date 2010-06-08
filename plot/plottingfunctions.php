@@ -24,24 +24,23 @@ function power($args, $mean){
 
 function mincarrier($args, $count){
 	extract($args);
-	$mincount = mincarrier_helper($args, $count);
+	$mean = $budget / $count;
+	$mean /= 2; // diploid cell
+	$power = power($args, $mean);
+	$mincount = get_mincount($controls, $count, $cutoff);
 	if($mincount == -1) return PLOT_DISCARD;
 	$ret = $mincount / ($power * $count);
 	if($ret > 1) return PLOT_DISCARD;
 	else return $ret;
 	
 }
-function mincarrier_helper($args, $count){
-	extract($args);
-	$mean = $budget / $count;
-	$mean /= 2; // diploid cell
-	$power = power($args, $mean);
-	return get_mincount($controls, $count, $cutoff);
-}
 
 function power_from_case_frequency($args, $count){
 	extract($args);
-	$mincount = mincarrier_helper($args, $count);
+	$mean = $budget / $count;
+	$mean /= 2; // Diploid cell
+	$power = power($args, $mean);
+	$mincount = get_mincount($controls, $count, $cutoff);
 	if($mincount == -1) return PLOT_DISCARD;
 	$ret = 1 - binomial_cdf($count, $frequency * $power, $mincount);
 	return $ret >= 0? $ret : 0;
