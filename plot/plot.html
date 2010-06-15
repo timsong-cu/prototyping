@@ -34,9 +34,12 @@ function doplot(){
 		var minreads = document.getElementById("minreads").value;
 		var controls = document.getElementById("controls").value;
 		var budget = document.getElementById("budget").value;
+		var overhead = document.getElementById("overhead").value;
+		var sequencecost = document.getElementById("sequencecost").value;
 		var cutoff = document.getElementById("cutoff").value;
 		url += "&minreads=" + encodeURIComponent(minreads) + "&controls=" + encodeURIComponent(controls)
-			+ "&cutoff=" + encodeURIComponent(cutoff) + "&budget=" + encodeURIComponent(budget);
+			+ "&cutoff=" + encodeURIComponent(cutoff) + "&budget=" + encodeURIComponent(budget) 
+			+ "&overhead=" + encodeURIComponent(overhead) + "&sequencecost=" + encodeURIComponent(sequencecost);
 		if(distribution == "negativebinomial"){
 			var size = document.getElementById("size").value;
 			url += "&size=" + encodeURIComponent(size);
@@ -46,10 +49,13 @@ function doplot(){
 		var minreads = document.getElementById("minreads").value;
 		var controls = document.getElementById("controls").value;
 		var budget = document.getElementById("budget").value;
+		var overhead = document.getElementById("overhead").value;
+		var sequencecost = document.getElementById("sequencecost").value;
 		var cutoff = document.getElementById("cutoff").value;
 		var frequency = document.getElementById("frequency").value;
 		url += "&minreads=" + encodeURIComponent(minreads) + "&controls=" + encodeURIComponent(controls)
-			+ "&cutoff=" + encodeURIComponent(cutoff) + "&budget=" + encodeURIComponent(budget);
+			+ "&cutoff=" + encodeURIComponent(cutoff) + "&budget=" + encodeURIComponent(budget) 
+			+ "&overhead=" + encodeURIComponent(overhead) + "&sequencecost=" + encodeURIComponent(sequencecost);
 		url += "&frequency=" + encodeURIComponent(frequency);
 		if(distribution == "negativebinomial"){
 			var size = document.getElementById("size").value;
@@ -60,11 +66,14 @@ function doplot(){
 		var minreads = document.getElementById("minreads").value;
 		var controls = document.getElementById("controls").value;
 		var budget = document.getElementById("budget").value;
+		var overhead = document.getElementById("overhead").value;
+		var sequencecost = document.getElementById("sequencecost").value;
 		var cutoff = document.getElementById("cutoff").value;
 		var frequency = document.getElementById("frequency").value;
 		var oddsratio = document.getElementById("oddsratio").value;
 		url += "&minreads=" + encodeURIComponent(minreads) + "&controls=" + encodeURIComponent(controls)
-			+ "&cutoff=" + encodeURIComponent(cutoff) + "&budget=" + encodeURIComponent(budget);
+			+ "&cutoff=" + encodeURIComponent(cutoff) + "&budget=" + encodeURIComponent(budget) 
+			+ "&overhead=" + encodeURIComponent(overhead) + "&sequencecost=" + encodeURIComponent(sequencecost);
 		url += "&frequency=" + encodeURIComponent(frequency) + "&oddsratio=" + oddsratio;
 		if(distribution == "negativebinomial"){
 			var size = document.getElementById("size").value;
@@ -100,8 +109,12 @@ function onactionchange(){
 			'<input type="text" id="minreads" /><br/>' +
 			'<label for="controls">Number of controls:</label>' + 
 			'<input type="text" id="controls" /><br/>' +
-			'<label for="budget">Budget (amount of sequencing, in units of human genome):</label>' + 
+			'<label for="budget">Budget (if more than one, separate by space or comma): $</label>' + 
 			'<input type="text" id="budget" /><br/>' +
+			'<label for="overhead">Overhead cost per sample: $</label>' + 
+			'<input type="text" id="overhead" /><br/>' +
+			'<label for="sequencecost">Cost of sequencing per human genome: $</label>' + 
+			'<input type="text" id="sequencecost" /><br/>' +
 			'<label for="cutoff">Cutoff for p-value: 1E</label>' + 
 			'<input type="text" id="cutoff" size="8"/><br/>';
 	}
@@ -111,8 +124,12 @@ function onactionchange(){
 			'<input type="text" id="minreads" /><br/>' +
 			'<label for="controls">Number of controls:</label>' + 
 			'<input type="text" id="controls" /><br/>' +
-			'<label for="budget">Budget (amount of sequencing, in units of human genome):</label>' + 
+			'<label for="budget">Budget (if more than one, separate by space or comma): $</label>' + 
 			'<input type="text" id="budget" /><br/>' +
+			'<label for="overhead">Overhead cost per sample: $</label>' + 
+			'<input type="text" id="overhead" /><br/>' +
+			'<label for="sequencecost">Cost of sequencing per human genome: $</label>' + 
+			'<input type="text" id="sequencecost" /><br/>' +
 			'<label for="cutoff">Cutoff for p-value: 1E</label>' + 
 			'<input type="text" id="cutoff" size="8"/><br/>' +
 			'<label for="frequency">Frequency of variant in cases (if more than one, separate by space or comma):</label>' + 
@@ -124,8 +141,12 @@ function onactionchange(){
 			'<input type="text" id="minreads" /><br/>' +
 			'<label for="controls">Number of controls:</label>' + 
 			'<input type="text" id="controls" /><br/>' +
-			'<label for="budget">Budget (amount of sequencing, in units of human genome):</label>' + 
+			'<label for="budget">Budget (if more than one, separate by space or comma): $</label>' + 
 			'<input type="text" id="budget" /><br/>' +
+			'<label for="overhead">Overhead cost per sample: $</label>' + 
+			'<input type="text" id="overhead" /><br/>' +
+			'<label for="sequencecost">Cost of sequencing per human genome: $</label>' + 
+			'<input type="text" id="sequencecost" /><br/>' +
 			'<label for="cutoff">Cutoff for p-value: 1E</label>' + 
 			'<input type="text" id="cutoff" size="8"/><br/>' +
 			'<label for="frequency">Frequency of variant in controls (if more than one, separate by space or comma):</label>' + 

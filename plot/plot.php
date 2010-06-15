@@ -62,7 +62,9 @@ function plot_histogram($data, $width, $height, $xtitle, $ytitle, $charttitle, $
 	$graph->SetMargin(100,60,60,60);
 	$graph->title->Set($charttitle);
 	$graph->xaxis->title->Set($xtitle);
+	$graph->xaxis->title->SetFont(FF_FONT2, FS_BOLD);
 	$graph->yaxis->title->Set($ytitle);
+	$graph->yaxis->title->SetFont(FF_FONT2, FS_BOLD);
 	$graph->yaxis->SetTitleMargin(60);
 	$graph->Stroke();
 }
@@ -90,7 +92,9 @@ function plot_line($data, $width, $height, $xtitle, $ytitle, $charttitle, $ymin,
 	$graph->SetMargin(100,60,60,60);
 	$graph->title->Set($charttitle);
 	$graph->xaxis->title->Set($xtitle);
+	$graph->xaxis->title->SetFont(FF_FONT2, FS_BOLD);
 	$graph->yaxis->title->Set($ytitle);
+	$graph->yaxis->title->SetFont(FF_FONT2, FS_BOLD);
 	$graph->yaxis->SetTitleMargin(60);
 	$graph->Stroke();
 }
@@ -100,10 +104,11 @@ function plot_scatter($data, $width, $height, $xtitle, $ytitle, $charttitle, $ym
 	$splot->SetColor('blue');
 	$splot->mark->SetType(MARK_FILLEDCIRCLE);
 	$splot->mark->SetColor('blue');
-	$splot->mark->SetFillColor('yellow');
+	$splot->mark->SetFillColor('blue');
 	$splot->mark->SetWidth(2);
 	$splot->link->Show();
 	$splot->link->SetStyle('dotted');
+	$splot->link->SetColor('blue');
 	$graph = new Graph($width, $height);
 	if($ymin == PLOT_AXIS_AUTO && $ymax == PLOT_AXIS_AUTO)
 		$graph->SetScale('linlin');
@@ -121,7 +126,9 @@ function plot_scatter($data, $width, $height, $xtitle, $ytitle, $charttitle, $ym
 	$graph->SetMargin(100,60,60,60);
 	$graph->title->Set($charttitle);
 	$graph->xaxis->title->Set($xtitle);
+	$graph->xaxis->title->SetFont(FF_FONT2, FS_BOLD);
 	$graph->yaxis->title->Set($ytitle);
+	$graph->yaxis->title->SetFont(FF_FONT2, FS_BOLD);
 	$graph->yaxis->SetTitleMargin(60);
 	$graph->Stroke();
 }
@@ -151,18 +158,21 @@ function plot_scatter_multiple($data, $width, $height, $xtitle, $ytitle, $chartt
 		$splot->SetColor($colors[$i % 9]);
 		$splot->mark->SetType(MARK_FILLEDCIRCLE);
 		$splot->mark->SetColor($colors[$i % 9]);
-		$splot->mark->SetFillColor($colors[($i + 4) % 9]);
+		$splot->mark->SetFillColor($colors[$i % 9]);
 		$splot->mark->SetWidth(2);
 		$splot->link->Show();
 		$splot->link->SetStyle('dotted');
+		$splot->link->SetColor($colors[$i % 9]);
 		$splot->SetLegend($series['legend']);
 		$graph->Add($splot);
 	}
 	$graph->title->Set($charttitle);
 	$graph->xaxis->title->Set($xtitle);
+	$graph->xaxis->title->SetFont(FF_FONT2, FS_BOLD);
 	$graph->yaxis->title->Set($ytitle);
+	$graph->yaxis->title->SetFont(FF_FONT2, FS_BOLD);
 	$graph->yaxis->SetTitleMargin(60);
-	$graph->legend->SetPos(0.8, 0.9, 'left', 'bottom');
+	$graph->legend->SetPos(0.725, 0.55, 'left', 'bottom');
 	$graph->Stroke();
 }
 ?>

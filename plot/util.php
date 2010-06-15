@@ -4,22 +4,22 @@ require_once('../fisher/fishercalc.php');
 define('PLOT_RANGE_AUTO', '-1');
 define('PLOT_DISCARD', '0xFFFF');
 
-function get_mincount($controls, $total, $cutoff){
+function get_mincount($controls, $total, $numberincontrols, $cutoff){
 /*
 	Table:
 			var		normal
 	case	$min	$total-$min
-	ctrl.	0		$controls
+	ctrl.	$numberincontrols		$controls - $numberincontrols
 */
 	for($start = 0, $end = $total, $cur = intval(round(($start+$end)/2)), $found=0;
 		!$found;){
-		if(fishertest_fast($cur, $total-$cur, 0, $controls) > $cutoff){
+		if(fishertest_fast($cur, $total-$cur, $numberincontrols, $controls - $numberincontrols) > $cutoff){
 			$start = $cur + 1;
 			$cur = intval(round(($start+$end)/2));
 		}
 		else{
 			$prev = $cur - 1;
-			if(fishertest_fast($prev, $total-$prev, 0, $controls) > $cutoff)
+			if(fishertest_fast($prev, $total-$prev, $numberincontrols, $controls - $numberincontrols) > $cutoff)
 				$found = true;
 			else {
 				$end = $cur - 1;
