@@ -25,23 +25,23 @@ define('PLOT_AXIS_AUTO', '0xFFFF');
  * @param $ymax The maximum value of the Y axis; set to PLOT_AXIS_AUTO to have the maximum automatically determined.
  */
 
-function plot($type, $data, $width = 500, $height=500, $xtitle = "", $ytitle = "", $charttitle = "",  $ymin = PLOT_AXIS_AUTO, $ymax = PLOT_AXIS_AUTO){
+function plot($type, $data, $width = 500, $height=500, $xtitle = '', $ytitle = '', $charttitle = '',  $ymin = PLOT_AXIS_AUTO, $ymax = PLOT_AXIS_AUTO, $formatter = NULL){
 	switch($type){
 		case PLOT_HISTOGRAM:
-			plot_histogram($data, $width, $height, $xtitle, $ytitle, $charttitle, $ymin, $ymax);
+			plot_histogram($data, $width, $height, $xtitle, $ytitle, $charttitle, $ymin, $ymax, $formatter);
 			break;
 		case PLOT_LINE:
-			plot_line($data, $width, $height, $xtitle, $ytitle, $charttitle, $ymin, $ymax);
+			plot_line($data, $width, $height, $xtitle, $ytitle, $charttitle, $ymin, $ymax, $formatter);
 			break;
 		case PLOT_SCATTER:
-			plot_scatter($data, $width, $height, $xtitle, $ytitle, $charttitle, $ymin, $ymax);
+			plot_scatter($data, $width, $height, $xtitle, $ytitle, $charttitle, $ymin, $ymax, $formatter);
 			break;
 		case PLOT_SCATTER_MULTIPLE:
-			plot_scatter_multiple($data, $width, $height, $xtitle, $ytitle, $charttitle, $ymin, $ymax);
+			plot_scatter_multiple($data, $width, $height, $xtitle, $ytitle, $charttitle, $ymin, $ymax, $formatter);
 			break;
 	}
 }
-function plot_histogram($data, $width, $height, $xtitle, $ytitle, $charttitle, $ymin, $ymax){
+function plot_histogram($data, $width, $height, $xtitle, $ytitle, $charttitle, $ymin, $ymax, $formatter){
 	$barplot = new BarPlot($data[0], $data[1]);
 	$barplot->SetWidth(5);
 	$barplot->SetFillColor('blue');
@@ -54,22 +54,26 @@ function plot_histogram($data, $width, $height, $xtitle, $ytitle, $charttitle, $
 	}
 	else if($ymax == PLOT_AXIS_AUTO){
 		$graph->SetScale('linlin');
-		$graph->yaxis->scale->SetAutoMin($ymax);
+		$graph->yaxis->scale->SetAutoMin($ymin);
 	}
 	else
 		$graph->SetScale('linlin', $ymin, $ymax);
 	$graph->Add($barplot);
-	$graph->SetMargin(100,60,60,60);
+	$graph->SetMargin(100,60,60,100);
 	$graph->title->Set($charttitle);
 	$graph->xaxis->title->Set($xtitle);
 	$graph->xaxis->title->SetFont(FF_FONT2, FS_BOLD);
 	$graph->yaxis->title->Set($ytitle);
 	$graph->yaxis->title->SetFont(FF_FONT2, FS_BOLD);
 	$graph->yaxis->SetTitleMargin(60);
+	if(isset($formatter)){
+		$graph->xaxis->SetLabelFormatCallback($formatter);
+		$graph->xaxis->SetTitleMargin(60);
+	}
 	$graph->Stroke();
 }
 
-function plot_line($data, $width, $height, $xtitle, $ytitle, $charttitle, $ymin, $ymax){
+function plot_line($data, $width, $height, $xtitle, $ytitle, $charttitle, $ymin, $ymax, $formatter){
 	$lineplot = new LinePlot($data[0], $data[1]);
 	$lineplot->SetColor('blue');
 	$lineplot->mark->SetType(MARK_FILLEDCIRCLE);
@@ -84,22 +88,26 @@ function plot_line($data, $width, $height, $xtitle, $ytitle, $charttitle, $ymin,
 	}
 	else if($ymax == PLOT_AXIS_AUTO){
 		$graph->SetScale('linlin');
-		$graph->yaxis->scale->SetAutoMin($ymax);
+		$graph->yaxis->scale->SetAutoMin($ymin);
 	}
 	else
 		$graph->SetScale('linlin', $ymin, $ymax);
 	$graph->Add($lineplot);
-	$graph->SetMargin(100,60,60,60);
+	$graph->SetMargin(100,60,60,100);
 	$graph->title->Set($charttitle);
 	$graph->xaxis->title->Set($xtitle);
 	$graph->xaxis->title->SetFont(FF_FONT2, FS_BOLD);
 	$graph->yaxis->title->Set($ytitle);
 	$graph->yaxis->title->SetFont(FF_FONT2, FS_BOLD);
 	$graph->yaxis->SetTitleMargin(60);
+	if(isset($formatter)){
+		$graph->xaxis->SetLabelFormatCallback($formatter);
+		$graph->xaxis->SetTitleMargin(60);
+	}
 	$graph->Stroke();
 }
 
-function plot_scatter($data, $width, $height, $xtitle, $ytitle, $charttitle, $ymin, $ymax){
+function plot_scatter($data, $width, $height, $xtitle, $ytitle, $charttitle, $ymin, $ymax, $formatter){
 	$splot = new ScatterPlot($data[0], $data[1]);
 	$splot->SetColor('blue');
 	$splot->mark->SetType(MARK_FILLEDCIRCLE);
@@ -118,22 +126,26 @@ function plot_scatter($data, $width, $height, $xtitle, $ytitle, $charttitle, $ym
 	}
 	else if($ymax == PLOT_AXIS_AUTO){
 		$graph->SetScale('linlin');
-		$graph->yaxis->scale->SetAutoMin($ymax);
+		$graph->yaxis->scale->SetAutoMin($ymin);
 	}
 	else
 		$graph->SetScale('linlin', $ymin, $ymax);
 	$graph->Add($splot);
-	$graph->SetMargin(100,60,60,60);
+	$graph->SetMargin(100,60,60,100);
 	$graph->title->Set($charttitle);
 	$graph->xaxis->title->Set($xtitle);
 	$graph->xaxis->title->SetFont(FF_FONT2, FS_BOLD);
 	$graph->yaxis->title->Set($ytitle);
 	$graph->yaxis->title->SetFont(FF_FONT2, FS_BOLD);
 	$graph->yaxis->SetTitleMargin(60);
+	if(isset($formatter)){
+		$graph->xaxis->SetLabelFormatCallback($formatter);
+		$graph->xaxis->SetTitleMargin(60);
+	}
 	$graph->Stroke();
 }
 
-function plot_scatter_multiple($data, $width, $height, $xtitle, $ytitle, $charttitle, $ymin, $ymax){
+function plot_scatter_multiple($data, $width, $height, $xtitle, $ytitle, $charttitle, $ymin, $ymax, $formatter){
 	$graph = new Graph($width, $height);
 	if($ymin == PLOT_AXIS_AUTO && $ymax == PLOT_AXIS_AUTO)
 		$graph->SetScale('linlin');
@@ -143,11 +155,11 @@ function plot_scatter_multiple($data, $width, $height, $xtitle, $ytitle, $chartt
 	}
 	else if($ymax == PLOT_AXIS_AUTO){
 		$graph->SetScale('linlin');
-		$graph->yaxis->scale->SetAutoMin($ymax);
+		$graph->yaxis->scale->SetAutoMin($ymin);
 	}
 	else
 		$graph->SetScale('linlin', $ymin, $ymax);
-	$graph->SetMargin(100,60,60,60);
+	$graph->SetMargin(100,60,60,100);
 	
 	$colors = array('blue', 'green', 'red', 'orange', 'yellow', 'black', 'darkgreen', 'sandybrown', 'lightblue');
 	$count = count($data);
@@ -173,6 +185,11 @@ function plot_scatter_multiple($data, $width, $height, $xtitle, $ytitle, $chartt
 	$graph->yaxis->title->SetFont(FF_FONT2, FS_BOLD);
 	$graph->yaxis->SetTitleMargin(60);
 	$graph->legend->SetPos(0.725, 0.55, 'left', 'bottom');
+	$graph->SetTickDensity(TICKD_NORMAL,TICKD_VERYSPARSE);
+	if(isset($formatter)){
+		$graph->xaxis->SetLabelFormatCallback($formatter);
+		$graph->xaxis->SetTitleMargin(60);
+	}
 	$graph->Stroke();
 }
 ?>

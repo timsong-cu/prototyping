@@ -76,7 +76,7 @@ function fisher_probability($n11, $n21, $n12, $n22, $scale=15){
 function fishertest_fast($n11, $n21, $n12, $n22){
 	// faster, but not arbitrary precision.
 	$ret = 0;
-	$det = $n11 * ($n12 + $n22) - $n12 * ($n11 + $n21);
+	$det = $n11 * $n22 - $n12 * $n21;
 	
 	if($det > 0){ // upper ratio larger than lower, decrement n21/n12 for more extreme cases
 		$minvalue = $n12 > $n21 ? $n21 : $n12;
@@ -98,6 +98,42 @@ function fisher_probability_fast($n11, $n21, $n12, $n22){
 	$lnprob = lnfact($n11 + $n21) + lnfact($n11 + $n12) + lnfact($n12 + $n22) + lnfact($n21 + $n22)
 	-lnfact($n11 + $n21 + $n12 + $n22) - lnfact($n11) - lnfact($n21) - lnfact($n12) - lnfact($n22);
 	return exp($lnprob);
+}
+
+/**
+ * Compute p-value using Fisher's exact test on a 2x2 contingency table,
+ * and compare the result to a specified cutoff.
+ * This function only computes the p-value to the extent necessary to return a correct result.
+ * 		X1		X2      
+ * Y1	$n11	$n21
+ * Y2	$n12	$n22
+ * 	
+ * @param int $n11
+ * @param int $n21
+ * @param int $n12
+ * @param int $n22 
+ * @param float $cutoff
+ * @return boolean true if p <= $cutoff, otherwise false.
+ */
+function fishertest_cutoff($n11, $n21, $n12, $n22, $cutoff){
+	$ret = 0;
+	$det = $n11 * $n22 - $n12 * $n21;
+	
+	if($det > 0){ // upper ratio larger than lower, decrement n21/n12 for more extreme cases
+		$minvalue = $n12 > $n21 ? $n21 : $n12;
+		for(; $minvalue >= 0; $n11++, $n21--, $n12--, $n22++, $minvalue--){
+			$ret += fisher_probability_fast($n11, $n21, $n12, $n22);
+			if($ret > $cutoff) return false;
+		}
+	}
+	else{
+		$minvalue = $n11 > $n22 ? $n22 : $n11;
+		for(; $minvalue >= 0; $n11--, $n21++, $n12++, $n22--, $minvalue--){
+			$ret += fisher_probability_fast($n11, $n21, $n12, $n22);
+			if($ret > $cutoff) return false;
+		}
+	}
+	return true;
 }
 
 ?>

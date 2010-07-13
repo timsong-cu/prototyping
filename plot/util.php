@@ -13,13 +13,13 @@ function get_mincount($controls, $total, $numberincontrols, $cutoff){
 */
 	for($start = 0, $end = $total, $cur = intval(round(($start+$end)/2)), $found=0;
 		!$found;){
-		if(fishertest_fast($cur, $total-$cur, $numberincontrols, $controls - $numberincontrols) > $cutoff){
+		if(!fishertest_cutoff($cur, $total-$cur, $numberincontrols, $controls - $numberincontrols, $cutoff)){
 			$start = $cur + 1;
 			$cur = intval(round(($start+$end)/2));
 		}
 		else{
 			$prev = $cur - 1;
-			if(fishertest_fast($prev, $total-$prev, $numberincontrols, $controls - $numberincontrols) > $cutoff)
+			if(!fishertest_cutoff($prev, $total-$prev, $numberincontrols, $controls - $numberincontrols, $cutoff))
 				$found = true;
 			else {
 				$end = $cur - 1;
@@ -31,7 +31,7 @@ function get_mincount($controls, $total, $numberincontrols, $cutoff){
 }
 
 /**
- * Prepare the data to plot for a function. This returns up to 1000 data points.
+ * Prepare the data to plot for a function. This returns up to 5000 data points.
  * @param $params A unique identifier of $function and $args.
  * @param $function The function to plot
  * @param $args Optional arguments to pass to the function
@@ -57,7 +57,7 @@ function getdata($params, $function, $args, $xstart, $xend, $step, $nocache = fa
 		$max = -1;
 		$plateau_count = 0;
 		$diff = 0;
-		for($i = 0, $index = 0, $x = $xstart; $i < 1000; $x += $step){
+		for($i = 0, $index = 0, $x = $xstart; $i < 5000; $x += $step){
 			if($diff * 1000 < $max)
 				$plateau_count++; //must have 30 consecutive data points at about the same value (diff < 0.1$ of max) to terminate.
 			else
@@ -92,7 +92,7 @@ function getdata($params, $function, $args, $xstart, $xend, $step, $nocache = fa
 		}
 	}
 	else {
-		for($i = 0, $index = 0, $x = $xstart; $i < 1000 && $x <= $xend; $x += $step){
+		for($i = 0, $index = 0, $x = $xstart; $i < 5000 && $x <= $xend; $x += $step){
 			if(isset($cache[strval($x)]))
 				$result = $cache[strval($x)];
 			else{
@@ -118,5 +118,46 @@ function getdata($params, $function, $args, $xstart, $xend, $step, $nocache = fa
 	fwrite($file, serialize($cache));
 	fclose($file);
 	return array($datay, $datax);
+}
+
+function array_bsearch( $needle, $haystack, $comparator , &$probe )
+{
+    $high = count( $haystack ) -1;
+    $low = 0;
+    
+    while ( $low < $high )
+    {
+        $probe = floor( ( $high + $low ) / 2 );
+        $comparison = $comparator( $haystack[$probe], $needle );
+        if ( $comparison < 0 )
+        {
+            $low = $probe +1;
+        }
+        elseif ( $comparison > 0 ) 
+        {
+            $high = $probe -1;
+        }
+        else
+        {
+            return true;
+        }
+    }
+    //The loop ended without a match 
+    //Compensate for needle greater than highest haystack element
+    if($comparator($haystack[count($haystack)-1], $needle) < 0)
+    {
+        $probe = count($haystack);
+    }
+    else if ($comparator($haystack[$low], $needle) < 0){
+    	$probe = $low + 1;
+    }
+    else
+    	$probe = $low;
+    	
+    return false;
+}
+
+function first_element_comparator($first, $second){
+	return $first[0] - $second[0];	
 }
 ?>
