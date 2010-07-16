@@ -26,6 +26,14 @@ else {
 	else $yto = $val; 
 }
 
+if($calculation == 'power'){
+	$step = floatval($_REQUEST['step']);
+	if($step <= 0) $step = 0.25;
+}
+else{
+	$step = intval($_REQUEST['step']);
+	if($step <= 0) $step = 1;
+}
 
 set_time_limit(120);
 
@@ -135,20 +143,20 @@ else if ($calculation == 'mincarrier_both'){
 	if($distribution == 'poisson'){
 		$args = compact('minreads', 'cutoff', 'ratio', 'distribution', 'sequencecost', 'overhead');
 		$charttitle = sprintf("Minimum proportion of variant carriers required\n"
-		. "(Poisson, minimum $minreads read(s), cost per sample $overhead, \n cost per genome $sequencecost, controls/cases=$ratio, cutoff=%f)", $cutoff);
+		. "(Poisson, minimum $minreads read(s), cost per sample $overhead, \n cost per genome $sequencecost, samples/cases=$ratio, cutoff=%f)", $cutoff);
 		$params = implode('_', array($function, $minreads, $cutoff, 'BUDGET', $ratio, $sequencecost, $overhead));		
 	}
 	else if ($distribution == 'negativebinomial'){
 		$args = compact('minreads', 'cutoff', 'ratio', 'size', 'distribution', 'sequencecost', 'overhead');
 		$charttitle = sprintf("Minimum proportion of variant carriers required\n"
 		. "(Negative binomial, dispersion parameter $size, minimum $minreads read(s),\n".
-		"cost per sample $overhead, cost per genome $sequencecost, \ncontrols/cases=$ratio, cutoff=%f)", $cutoff);
+		"cost per sample $overhead, cost per genome $sequencecost, \nsamples/cases=$ratio, cutoff=%f)", $cutoff);
 		$params = implode('_', array($function, $minreads, $cutoff, 'BUDGET', $ratio, $size, $sequencecost, $overhead));
 	}
 	else if($distribution == 'table'){
 		$args = compact('cutoff', 'ratio', 'distribution', 'sequencecost', 'overhead', 'table');
 		$charttitle = sprintf("Minimum proportion of variant carriers required\n"
-		. "(Table, cost per sample $overhead, \n cost per genome $sequencecost, controls/cases=$ratio, cutoff=%f)", $cutoff);
+		. "(Table, cost per sample $overhead, \n cost per genome $sequencecost, samples/cases=$ratio, cutoff=%f)", $cutoff);
 		$params = implode('_', array($function, $cutoff, 'BUDGET', $ratio, $sequencecost, $overhead, $table_token));		
 		
 	}
@@ -187,21 +195,21 @@ else if ($calculation == 'power_from_case_frequency_both'){
 		$args = compact('minreads', 'cutoff', 'ratio', 'distribution', 'sequencecost', 'overhead');
 		$charttitle = sprintf("Power of experiment\n"
 		. "(Poisson, minimum $minreads read(s), cost per sample $overhead, \ncost per genome $sequencecost, "
-		. "controls/cases=$ratio, cutoff=%f,\ncalculated from frequency of variant in cases)", $cutoff);
+		. "samples/cases=$ratio, cutoff=%f,\ncalculated from frequency of variant in cases)", $cutoff);
 		$params = implode('_', array($function, $minreads, $cutoff, 'BUDGET', $ratio, $sequencecost, $overhead));
 	}
 	else if ($distribution == 'negativebinomial'){
 		$args = compact('minreads', 'cutoff', 'ratio', 'size', 'distribution', 'sequencecost', 'overhead');
 		$charttitle = sprintf("Power of experiment\n"
 		. "(Negative binomial, dispersion parameter $size, minimum $minreads read(s), \ncost per sample $overhead, cost per genome $sequencecost, "
-		. "controls/cases=$ratio, \ncutoff=%f, calculated from frequency of variant in cases)", $cutoff);
+		. "samples/cases=$ratio, \ncutoff=%f, calculated from frequency of variant in cases)", $cutoff);
 		$params = implode('_', array($function, $minreads, $cutoff, 'BUDGET', $ratio, $size, $sequencecost, $overhead));
 	}
 	else if($distribution == 'table'){
 		$args = compact('cutoff', 'ratio', 'distribution', 'sequencecost', 'overhead', 'table');
 		$charttitle = sprintf("Power of experiment\n"
 		. "(Table, cost per sample $overhead, \ncost per genome $sequencecost, "
-		. "controls/cases=$ratio, cutoff=%f,\ncalculated from frequency of variant in cases)", $cutoff);
+		. "samples/cases=$ratio, cutoff=%f,\ncalculated from frequency of variant in cases)", $cutoff);
 		$params = implode('_', array($function, $cutoff, 'BUDGET', $ratio, $sequencecost, $overhead, $table_token));
 		
 	}
@@ -239,21 +247,21 @@ else if ($calculation == 'power_from_control_frequency_both'){
 		$args = compact('minreads', 'cutoff', 'ratio', 'distribution', 'oddsratio', 'sequencecost', 'overhead');
 		$charttitle = sprintf("Power of experiment\n"
 		. "(Poisson, minimum $minreads read(s), cost per sample $overhead, \ncost per genome $sequencecost, "
-		. "controls/cases=$ratio, cutoff=%f,\ncalculated from frequency of variant in controls, odds ratio $oddsratio)", $cutoff);
+		. "samples/cases=$ratio, cutoff=%f,\ncalculated from frequency of variant in controls, odds ratio $oddsratio)", $cutoff);
 		$params = implode('_', array($function, $minreads, $cutoff, 'BUDGET', $ratio, $oddsratio, $sequencecost, $overhead));
 	}
 	else if ($distribution == 'negativebinomial'){
 		$args = compact('minreads', 'cutoff', 'ratio', 'size', 'distribution', 'oddsratio', 'sequencecost', 'overhead');
 		$charttitle = sprintf("Power of experiment\n"
 		. "(Negative binomial, dispersion parameter $size, minimum $minreads read(s), \ncost per sample $overhead, cost per genome $sequencecost,"
-		. " \ncontrols/cases=$ratio, cutoff=%f,\ncalculated from frequency of variant in controls, odds ratio $oddsratio)", $cutoff);
+		. " \nsamples/cases=$ratio, cutoff=%f,\ncalculated from frequency of variant in controls, odds ratio $oddsratio)", $cutoff);
 		$params = implode('_', array($function, $minreads, $cutoff, 'BUDGET', $ratio, $size, $oddsratio, $sequencecost, $overhead));
 	}
 	else if($distribution == 'table'){
 		$args = compact('cutoff', 'ratio', 'distribution', 'oddsratio', 'sequencecost', 'overhead', 'table');
 		$charttitle = sprintf("Power of experiment\n"
 		. "(Table, cost per sample $overhead, \ncost per genome $sequencecost, "
-		. "controls/cases=$ratio, cutoff=%f,\ncalculated from frequency of variant in controls, odds ratio $oddsratio)", $cutoff);
+		. "samples/cases=$ratio, cutoff=%f,\ncalculated from frequency of variant in controls, odds ratio $oddsratio)", $cutoff);
 		$params = implode('_', array($function, $minreads, $cutoff, 'BUDGET', $ratio, $oddsratio, $sequencecost, $overhead, $table_token));
 		
 	}
@@ -263,12 +271,12 @@ $function = $calculation;
 if($calculation == 'distribution'){
 	$xstart = intval($xfrom > 0 ? $xfrom : 0);
 	$xend = intval($xto > 0 ? $xto : PLOT_RANGE_AUTO);
-	$data = getdata($params, $function, $args, $xstart, $xend, 1);
+	$data = getdata($params, $function, $args, $xstart, $xend, $step);
 }
 else if($calculation == 'power'){
 	$xstart = floatval($xfrom >= 0 ? $xfrom : 0);
 	$xend = floatval($xto > $xfrom && $xto > 0 ? $xto : PLOT_RANGE_AUTO);
-	$data = getdata($params, $function, $args, $xstart, $xend, 0.25);
+	$data = getdata($params, $function, $args, $xstart, $xend, $step);
 }
 else if($calculation == 'mincarrier' || $calculation == 'mincarrier_both'){
 	$xstart = intval($xfrom > 1 ? $xfrom : 1);
@@ -281,7 +289,7 @@ else if($calculation == 'mincarrier' || $calculation == 'mincarrier_both'){
 			$xend = intval($xto >= 1 && $xto <= $budg / $sequencecost ? $xto : PLOT_RANGE_AUTO);
 		$args['budget'] = $budg;
 		$para = str_replace('BUDGET', strval($budg), $params);
-		$data_t = getdata($para, $function, $args, $xstart, $xend, 1);
+		$data_t = getdata($para, $function, $args, $xstart, $xend, $step);
 		$data[] = array('y' => $data_t[0], 'x' => $data_t[1], 'legend' => "budget = $budg");
 	}
 }
@@ -304,7 +312,7 @@ else if($calculation == 'power_from_case_frequency'
 				$xend = intval($xto >= 1 && $xto <= $budg / $sequencecost ? $xto : PLOT_RANGE_AUTO);
 			$args['budget'] = $budg;
 			$para = str_replace('BUDGET', strval($budg), $para1);
-			$data_t = getdata($para, $function, $args, $xstart, $xend, 1);
+			$data_t = getdata($para, $function, $args, $xstart, $xend, $step);
 			$data[] = array('y' => $data_t[0], 'x' => $data_t[1], 'legend' => "f = $frequency, budget = $budg");
 		}
 	}

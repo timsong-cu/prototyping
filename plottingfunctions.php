@@ -11,6 +11,7 @@ function distribution($args, $x){
 
 function power($args, $mean){
 	extract($args);
+	if($mean == 0) return 0;
 	if($distribution != 'table'){
 		$ret = 1.0;
 		$args['mean'] = $mean;
@@ -77,7 +78,7 @@ function mincarrier_both($args, $count){
 	if($available <= 0) return PLOT_DISCARD;
 	$mean = $available / $sequencecost / $count;
 	$power = power($args, $mean);
-	$cases = round($count / (1 + $ratio));
+	$cases = round($count / $ratio);
 	$controls = $count - $cases;
 	if($cases <= 0 || $controls <= 0) return PLOT_DISCARD;
 	$mincount = get_mincount($controls, $cases, 0, $cutoff);
@@ -105,7 +106,7 @@ function power_from_case_frequency_both($args, $count){
 	$available = $budget - $overhead * $count;
 	if($available <= 0) return PLOT_DISCARD;
 	$mean = $available / $sequencecost / $count;
-	$cases = round($count / (1 + $ratio));
+	$cases = round($count / $ratio);
 	$controls = $count - $cases;
 	if($cases <= 0 || $controls <= 0) return PLOT_DISCARD;
 	$power = power($args, $mean);
@@ -142,7 +143,7 @@ function power_from_control_frequency_both($args, $count){
 	$available = $budget - $overhead * $count;
 	if($available <= 0) return PLOT_DISCARD;
 	$mean = $available / $sequencecost / $count;
-	$cases = round($count / (1 + $ratio));
+	$cases = round($count / $ratio);
 	$controls = $count - $cases;
 	if($cases <= 0 || $controls <= 0) return PLOT_DISCARD;
 	$freq_cases = ($oddsratio * $frequency / (1-$frequency)) / (1+($oddsratio * $frequency / (1-$frequency)));

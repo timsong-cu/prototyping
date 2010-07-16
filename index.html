@@ -15,6 +15,8 @@ function doplot(){
 	var xto = get_value("xto");
 	var yfrom = get_value("yfrom");
 	var yto = get_value("yto");
+	var step = get_value("step");
+	
 	if(action == "power"){
 		var minreads = get_value("minreads");
 		url += "&minreads=" + encodeURIComponent(minreads);
@@ -115,6 +117,9 @@ function doplot(){
 		url+= "&yfrom=" + encodeURIComponent(yfrom);
 	if(yto != "")
 		url+= "&yto=" + encodeURIComponent(yto);
+	if(step != "")
+		url+= "&step=" + encodeURIComponent(step);
+	
 	document.getElementById("Plotpending").innerHTML = 
 		'<img src="loading.gif" alt="" />';
 	document.getElementById("Plot").innerHTML = 
@@ -151,7 +156,7 @@ function onactionchange(){
 		}
 		else if (action == "mincarrier-both"){
 			newhtml +=  
-				generate_input_tag("ratio", "Ratio of controls to cases: ") +
+				generate_input_tag("ratio", "Ratio of all samples to cases: ") +
 				generate_input_tag("budget", "Budget (if more than one, separate by space or comma): $") +
 				generate_input_tag("overhead", "Overhead cost per sample: $") +
 				generate_input_tag("sequencecost", "Cost of sequencing per 1X diploid genome: $") +
@@ -179,7 +184,7 @@ function onactionchange(){
 	
 		else if (action == "power-from-case-frequency-both"){
 			newhtml +=  
-				generate_input_tag("ratio", "Ratio of controls to cases: ") +
+				generate_input_tag("ratio", "Ratio of all samples to cases: ") +
 				generate_input_tag("budget", "Budget (if more than one, separate by space or comma): $") +
 				generate_input_tag("overhead", "Overhead cost per sample: $") +
 				generate_input_tag("sequencecost", "Cost of sequencing per 1X diploid genome: $") +
@@ -188,7 +193,7 @@ function onactionchange(){
 		}
 		else if (action == "power-from-control-frequency-both"){
 			newhtml +=  
-				generate_input_tag("ratio", "Ratio of controls to cases: ") +
+				generate_input_tag("ratio", "Ratio of all samples to cases: ") +
 				generate_input_tag("budget", "Budget (if more than one, separate by space or comma): $") +
 				generate_input_tag("overhead", "Overhead cost per sample: $") +
 				generate_input_tag("sequencecost", "Cost of sequencing per 1X diploid genome: $") +
@@ -285,6 +290,7 @@ function generate_input_tag(id, label){
 Plot: <br/>
 <label for="xfrom">X axis: from </label><input type="text" id="xfrom" size="6" value="0" />
 <label for="xto"> to </label><input type="text" id="xto" size="6"/>
+<label for="step"> step </label><input type="text" id="step" size="6"/>
 <label for="yfrom">Y axis: from </label><input type="text" id="yfrom" size="6" value="" />
 <label for="yto"> to </label><input type="text" id="yto" size="6" value=""/>
 <input type="button" value="Plot" onclick="doplot()" /><br/>
