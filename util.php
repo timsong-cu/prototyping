@@ -59,13 +59,14 @@ function getdata($params, $function, $args, $xstart, $xend, $step, $nocache = fa
 	if($xend == PLOT_RANGE_AUTO){
 		$max = -1;
 		$plateau_count = 0;
+		$discard_count = 0;
 		$diff = 0;
 		for($i = 0, $index = 0, $x = $xstart; $i < 5000; $x += $step){
 			if($diff * 1000 < $max)
 				$plateau_count++; //must have 30 consecutive data points at about the same value (diff < 0.1$ of max) to terminate.
 			else
 				$plateau_count = 0; //reset if it's not a true plateau.
-			if($plateau_count >= 30) break;
+			if($plateau_count >= 10 && $plateau_count * $step >= 30) break;
 			if(isset($cache[strval($x)]))
 				$result = $cache[strval($x)];
 			else{
@@ -78,8 +79,14 @@ function getdata($params, $function, $args, $xstart, $xend, $step, $nocache = fa
 				}
 				$cache[strval($x)] = $result;
 			}
-			if($result == PLOT_DISCARD)
+			if($result == PLOT_DISCARD){
+				$discard_count ++;
+				if($discard_count >= 50) break;
 				continue;
+			}
+			else
+				$discard_count = 0;
+				
 			
 			$datax[$index] = $x;
 			$datay[$index] = $result; 
