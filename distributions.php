@@ -1,6 +1,5 @@
 <?php
 require_once('util.php');
-require_once('../math.php');
 
 function poisson_distribution($args, $x){
 	extract($args);

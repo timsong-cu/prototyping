@@ -1,6 +1,5 @@
 <?php 
 require_once('util.php');
-require_once('../math.php');
 require_once('distributions.php');
 
 function distribution($args, $x){

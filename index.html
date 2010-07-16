@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<title>Optimal design and Power Estimation for rare variant Association (OPERA) </title>
+<title>Optimal design and Power Estimation for Rare variant Association (OPERA) </title>
 <script type="text/javascript">
 var table_count = 0;
 
@@ -11,8 +11,10 @@ function doplot(){
 	var distribution = get_value("distribution");
 	var action = get_value("action");
 	var url = "plotapi.php?function=" + distribution +"-" + action;
-	var from = get_value("from");
-	var to = get_value("to");
+	var xfrom = get_value("xfrom");
+	var xto = get_value("xto");
+	var yfrom = get_value("yfrom");
+	var yto = get_value("yto");
 	if(action == "power"){
 		var minreads = get_value("minreads");
 		url += "&minreads=" + encodeURIComponent(minreads);
@@ -105,10 +107,14 @@ function doplot(){
 	else if(distribution == 'table'){
 		url += "&table=" + encodeURIComponent(gettablecontent());
 	}
-	if(from != "")
-		url+= "&from=" + encodeURIComponent(from);
-	if(to != "")
-		url+= "&to=" + encodeURIComponent(to);
+	if(xfrom != "")
+		url+= "&xfrom=" + encodeURIComponent(xfrom);
+	if(xto != "")
+		url+= "&xto=" + encodeURIComponent(xto);
+	if(yfrom != "")
+		url+= "&yfrom=" + encodeURIComponent(yfrom);
+	if(yto != "")
+		url+= "&yto=" + encodeURIComponent(yto);
 	document.getElementById("Plotpending").innerHTML = 
 		'<img src="loading.gif" alt="" />';
 	document.getElementById("Plot").innerHTML = 
@@ -252,7 +258,8 @@ function generate_input_tag(id, label){
 </head>
 <body>
 <center>
-<h4>Optimal design and Power Estimation for rare variant Association (OPERA)</h4>
+<h4>Optimal design and Power Estimation for Rare variant Association (OPERA)</h4>
+</center>
 <label for="distibution">Distribution of depth coverage:</label>
 <select id="distribution" onchange="ondistributionchange()">
 <option value="poisson" selected="selected">Poisson</option>
@@ -275,12 +282,14 @@ function generate_input_tag(id, label){
 </div>
 <div id="distributionparams">
 </div><br/>
-<label for="from">Plot from: </label><input type="text" id="from" size="6" />
-<label for="to"> to </label><input type="text" id="to" size="6"/>
+Plot: <br/>
+<label for="xfrom">X axis: from </label><input type="text" id="xfrom" size="6" value="0" />
+<label for="xto"> to </label><input type="text" id="xto" size="6"/>
+<label for="yfrom">Y axis: from </label><input type="text" id="yfrom" size="6" value="" />
+<label for="yto"> to </label><input type="text" id="yto" size="6" value=""/>
 <input type="button" value="Plot" onclick="doplot()" /><br/>
 <div id="Plotpending"></div>
 <div id="Plot"></div>
 <div id="Plotlink"></div>
-</center>
 </body>
 </html>

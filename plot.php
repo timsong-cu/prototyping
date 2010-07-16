@@ -1,8 +1,8 @@
 <?php
-require_once('../jpgraph/jpgraph.php');
-require_once('../jpgraph/jpgraph_bar.php');
-require_once('../jpgraph/jpgraph_line.php');
-require_once('../jpgraph/jpgraph_scatter.php');
+require_once('jpgraph/jpgraph.php');
+require_once('jpgraph/jpgraph_bar.php');
+require_once('jpgraph/jpgraph_line.php');
+require_once('jpgraph/jpgraph_scatter.php');
 require_once('util.php');
 
 define('PLOT_HISTOGRAM', '1');

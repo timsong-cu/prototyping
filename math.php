@@ -1,68 +1,6 @@
 <?php
 
 define('FPMIN', '1.0e-30');
-/* 
- * Computes the factoral (x!).
- * @author Thomas Oldbury. 
- * @license Public domain. 
- */ 
-function bcfact($fact, $scale = 100)
-{
-    if($fact <= 1) return 1;
-    return bcmul($fact, bcfact(bcsub($fact, '1'), $scale), $scale);
-}
-
-/* 
- * Computes e^x, where e is Euler's constant, or approximately 2.71828.
- * @author Thomas Oldbury. 
- * @license Public domain. 
- */ 
-function bcexp($x, $scale = 100)
-{
-    /* Compute e^x. */
-    $res = bcadd('1.0', $x, $scale);
-    for(;;)
-    {
-       $new = bcadd($res, bcdiv(bcpow($x, bcadd($i, '2'), $scale), bcfact(bcadd($i, '2'), $scale), $scale), $scale);
-	   if(bccomp($res, $new, $scale) == 0) break;
-	   $res = $new;
-    }
-    return $res;
-}
-
-/* 
- * Computes ln(x).
- * @author Thomas Oldbury. 
- * @license Public domain. 
- */ 
-function bcln($a, $iters = 10, $scale = 100) 
-{ 
-    $result = "0.0"; 
-    
-    for($i = 0; $i < $iters; $i++) 
-    {
-        $pow = bcadd("1.0", bcmul($i, "2.0", $scale), $scale);
-        //$pow = 1 + ($i * 2);
-        $mul = bcdiv("1.0", $pow, $scale); 
-        $fraction = bcmul($mul, bcpow(bcdiv(bcsub($a, "1.0", $scale), bcadd($a, "1.0", $scale), $scale), $pow, $scale), $scale); 
-        $result = bcadd($fraction, $result, $scale); 
-    } 
-    
-    $res = bcmul("2.0", $result, $scale); 
-    return $res;
-} 
-
-/* 
- * Computes a^b, where a and b can have decimal digits, be negative and/or very large.
- * Also works for 0^0. Only able to calculate up to 10 digits. Quite slow.
- * @author Thomas Oldbury. 
- * @license Public domain. 
- */ 
-function bcpowx($a, $b, $iters = 25, $scale = 100)
-{
-    $ln = bcln($a, $iters, $scale);
-    return bcexp(bcmul($ln, $b, $scale), $iters, $scale);
-}
 
 // Adapted from http://lib.stat.cmu.edu/apstat/245
 // See Lanczos, C. 'A precision approximation of the gamma
@@ -98,6 +36,70 @@ function binomial_cdf($n, $p, $k){
 	if($k >= $n) return 1;
 	return betai($n - $k, $k + 1, 1 - $p);
 }
+
+function fishertest_fast($n11, $n21, $n12, $n22){
+	// faster, but not arbitrary precision.
+	$ret = 0;
+	$det = $n11 * $n22 - $n12 * $n21;
+	
+	if($det > 0){ // upper ratio larger than lower, decrement n21/n12 for more extreme cases
+		$minvalue = $n12 > $n21 ? $n21 : $n12;
+		for(; $minvalue >= 0; $n11++, $n21--, $n12--, $n22++, $minvalue--){
+			$ret += fisher_probability_fast($n11, $n21, $n12, $n22);
+		}
+	}
+	else{
+		$minvalue = $n11 > $n22 ? $n22 : $n11;
+		for(; $minvalue >= 0; $n11--, $n21++, $n12++, $n22--, $minvalue--){
+			$ret += fisher_probability_fast($n11, $n21, $n12, $n22);
+		}
+	}
+	
+	return $ret;
+}
+
+function fisher_probability_fast($n11, $n21, $n12, $n22){
+	$lnprob = lnfact($n11 + $n21) + lnfact($n11 + $n12) + lnfact($n12 + $n22) + lnfact($n21 + $n22)
+	-lnfact($n11 + $n21 + $n12 + $n22) - lnfact($n11) - lnfact($n21) - lnfact($n12) - lnfact($n22);
+	return exp($lnprob);
+}
+
+/**
+ * Compute p-value using Fisher's exact test on a 2x2 contingency table,
+ * and compare the result to a specified cutoff.
+ * This function only computes the p-value to the extent necessary to return a correct result.
+ * 		X1		X2      
+ * Y1	$n11	$n21
+ * Y2	$n12	$n22
+ * 	
+ * @param int $n11
+ * @param int $n21
+ * @param int $n12
+ * @param int $n22 
+ * @param float $cutoff
+ * @return boolean true if p <= $cutoff, otherwise false.
+ */
+function fishertest_cutoff($n11, $n21, $n12, $n22, $cutoff){
+	$ret = 0;
+	$det = $n11 * $n22 - $n12 * $n21;
+	
+	if($det > 0){ // upper ratio larger than lower, decrement n21/n12 for more extreme cases
+		$minvalue = $n12 > $n21 ? $n21 : $n12;
+		for(; $minvalue >= 0; $n11++, $n21--, $n12--, $n22++, $minvalue--){
+			$ret += fisher_probability_fast($n11, $n21, $n12, $n22);
+			if($ret > $cutoff) return false;
+		}
+	}
+	else{
+		$minvalue = $n11 > $n22 ? $n22 : $n11;
+		for(; $minvalue >= 0; $n11--, $n21++, $n12++, $n22--, $minvalue--){
+			$ret += fisher_probability_fast($n11, $n21, $n12, $n22);
+			if($ret > $cutoff) return false;
+		}
+	}
+	return true;
+}
+
 
 // Adapted from Numerical Recipes in C, 2e
 function betai($a, $b, $x){

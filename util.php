@@ -1,5 +1,5 @@
 <?php
-require_once('../fisher/fishercalc.php');
+require_once('math.php');
 
 define('PLOT_RANGE_AUTO', '-1');
 define('PLOT_DISCARD', '0xFFFF');
