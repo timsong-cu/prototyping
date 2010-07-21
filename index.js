@@ -41,7 +41,7 @@ function doplot(){
 	}
 	else if(action == "distribution"){
 		var mean = get_value("mean");
-		url += "&mean=" + encodeURIComponent(average);
+		url += "&mean=" + encodeURIComponent(mean);
 	}
 	else if(action == "mincarrier"){
 		var minreads = get_value("minreads");
