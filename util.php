@@ -45,11 +45,9 @@ function getdata($params, $function, $args, $xstart, $xend, $step, $nocache = fa
 		$cache = array();
 	else{
 		// use cache and file also exists.
-		$file = @fopen("cache/$hash", "r");
-		if($file){
-			$size = @filesize("cache/$hash");
-			$cache = @unserialize(@fread($file, $size));
-			fclose($file);
+		$result = @file_get_contents ("cache/$hash");
+		if($result){
+			$cache = @unserialize($result);
 		}
 		if(!$cache) $cache = array();
 	}
@@ -124,11 +122,7 @@ function getdata($params, $function, $args, $xstart, $xend, $step, $nocache = fa
 			$index ++; 
 		}
 	}
-	$file = @fopen("cache/$hash", "w");
-	if($file){
-		fwrite($file, serialize($cache));
-		fclose($file);
-	}
+	@file_put_contents("cache/$hash", serialize($cache));
 	return array($datay, $datax);
 }
 

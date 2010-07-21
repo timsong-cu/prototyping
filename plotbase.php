@@ -5,11 +5,11 @@ require_once('jpgraph/jpgraph_line.php');
 require_once('jpgraph/jpgraph_scatter.php');
 require_once('util.php');
 
-define('PLOT_HISTOGRAM', '1');
-define('PLOT_LINE', '2');
-define('PLOT_SCATTER', '3');
-define('PLOT_SCATTER_MULTIPLE', '4');
-define('PLOT_AXIS_AUTO', '0xFFFF');
+define('PLOT_HISTOGRAM', 1);
+define('PLOT_LINE', 2);
+define('PLOT_SCATTER', 3);
+define('PLOT_SCATTER_MULTIPLE', 4);
+define('PLOT_AXIS_AUTO', 0xFFFF);
 /**
  * Plot a function.
  * @param $type The type of the plot to generate.

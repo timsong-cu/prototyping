@@ -1,6 +1,8 @@
 <?php
 require_once('plot.php');
 
+session_start();
+
 $action = $_REQUEST['action'];
 
 switch($action){
@@ -10,9 +12,49 @@ switch($action){
 	case 'data':
 		print_data();
 		break;
+	case 'tableupload':
+		table_upload();
+		break;
+	case 'defaultvalues':
+		print_default();
+		break;
 	default:
 		print_index();
 		break;
+}
+
+function table_upload(){
+	header("Content-type: application/json");
+	if(isset($_REQUEST['table'])){
+		$_SESSION['table'] = $_REQUEST['table'];
+		echo '{ "token" : "' . md5($_SESSION['table']) . '" }';
+	}
+	else {
+		echo '{ "token" : "" }';
+	}
+	
+}
+
+function print_default(){
+	header('Content-type: text/javascript');
+?>
+	var defaults = {
+	'xfrom': 0,
+	'xto': 'auto',
+	'yfrom': 'auto',
+	'yto': 'auto',
+	'step': 'auto',
+	'mean': <?php echo PLOT_DEFAULT_MEAN;?>,
+	'minreads': <?php echo PLOT_DEFAULT_MINREADS;?>,
+	'size': <?php echo PLOT_DEFAULT_SIZE;?>,
+	'ratio': <?php echo PLOT_DEFAULT_RATIO;?>,
+	'oddsratio': <?php echo PLOT_DEFAULT_ODDSRATIO;?>,
+	'controls': <?php echo PLOT_DEFAULT_CONTROLS;?>,
+	'overhead': <?php echo PLOT_DEFAULT_OVERHEAD;?>,
+	'sequencecost': <?php echo PLOT_DEFAULT_SEQUENCECOST;?>,
+	'cutoff': <?php echo PLOT_DEFAULT_CUTOFF;?>
+	};
+<?php
 }
 
 function print_index(){
@@ -22,7 +64,13 @@ function print_index(){
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <title>Optimal design and Power Estimation for Rare variant Association (OPERA) </title>
+<script type="text/javascript" src="index.php?action=defaultvalues"></script>
 <script type="text/javascript" src="index.js"></script>
+<style type="text/css"><!--
+.hint {
+color: grey
+}
+--></style>
 </head>
 <body>
 <center>
@@ -45,8 +93,8 @@ function print_index(){
 <option value="power-from-control-frequency-both">power vs. total number of samples, sequencing both cases and controls, given frequency of variant in controls and odds ratio</option>
 </select><br/>
 <div id="actionparams">
-<label for="average">Average depth-coverage:</label>
-<input type="text" id="average" />
+<label for="mean">Average depth-coverage:</label>
+<input type="text" id="mean" class="hint" value="<?php echo PLOT_DEFAULT_MEAN;?>" onfocus="input_onfocus('mean')" onblur="input_onblur('mean')"/>
 </div>
 <div id="distributionparams">
 </div><br/>

@@ -3,6 +3,17 @@ require_once('plotbase.php');
 require_once('plottingfunctions.php');
 require_once('util.php');
 
+
+define('PLOT_DEFAULT_MEAN', 1);
+define('PLOT_DEFAULT_SIZE', 5);
+define('PLOT_DEFAULT_MINREADS', 2);
+define('PLOT_DEFAULT_CUTOFF', -6);
+define('PLOT_DEFAULT_CONTROLS', 400);
+define('PLOT_DEFAULT_OVERHEAD', 0);
+define('PLOT_DEFAULT_SEQUENCECOST', 100);
+define('PLOT_DEFAULT_RATIO', exp(1));
+define('PLOT_DEFAULT_ODDSRATIO', 5);	
+
 function get_plot_data(){
 	$function = strtolower($_REQUEST['function']);
 	$function = strtr($function, '-', '_'); // poisson-power to poisson_power
@@ -52,29 +63,48 @@ function get_plot_data(){
 	$freq = preg_split('/[\s,]+/', strval($_REQUEST['frequency']));
 	$oddsratio = floatval($_REQUEST['oddsratio']);
 	
-	if($mean <= 0) $mean = 1;
-	if($size <= 0) $size = 5;
-	if($minreads <= 0) $minreads = 2;
-	if($cutoff <= 0 || $cutoff >= 1) $cutoff = 0.000001;
-	if($controls <= 0) $controls = 400;
-	if($overhead < 0) $overhead = 0;
-	if($sequencecost <= 0) $sequencecost = 100;
-	if($ratio <= 0) $ratio = exp(1);
-	if($oddsratio <= 0) $oddsratio = 5;
+	if($mean <= 0) $mean = PLOT_DEFAULT_MEAN;
+	if($size <= 0) $size = PLOT_DEFAULT_SIZE;
+	if($minreads <= 0) $minreads = PLOT_DEFAULT_MINREADS;
+	if($cutoff <= 0 || $cutoff >= 1) $cutoff = pow(10, PLOT_DEFAULT_CUTOFF);
+	if($controls <= 0) $controls = PLOT_DEFAULT_CONTROLS;
+	if($overhead < 0) $overhead = PLOT_DEFAULT_OVERHEAD;
+	if($sequencecost <= 0) $sequencecost = PLOT_DEFAULT_SEQUENCECOST;
+	if($ratio <= 0) $ratio = PLOT_DEFAULT_RATIO;
+	if($oddsratio <= 0) $oddsratio = PLOT_DEFAULT_ODDSRATIO;
+	
+	if(isset($_REQUEST['usesavedtable'])){
+		if(!isset($_SESSION['table'])) die("No table saved in session!");
+		if($_REQUEST['usesavedtable'] != 'last'){
+			// verify that we are talking about the same table here.
+			if(md5($_SESSION['table']) != $_REQUEST['usesavedtable']) trigger_error('Table token does not match saved table!');
+		}
+		$usesavedtable = true;
+	}
 	
 	// dealing with tables.
 	
 	if($distribution == 'table'){
 		if($calculation == 'distribution') die('invalid operation');
-		$table_raw = preg_split('/[^\d\.]/', $_REQUEST['table'], -1, PREG_SPLIT_NO_EMPTY);
-		
+		if($usesavedtable){
+			// Disable client-side caching when using a saved table
+			header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
+			header("Expires: Sat, 26 Jul 1997 05:00:00 GMT"); // Date in the past
+			$table_req = $_SESSION['table'];
+			
+		}
+		else {
+			$_SESSION['table'] = $_REQUEST['table'];
+			$table_req = $_REQUEST['table'];
+		}
+		$table_raw = preg_split('/[^\d\.]+/', $table_req, -1, PREG_SPLIT_NO_EMPTY);
 		// input is series of x,y-coordinate pairs.
 		$table_count = count($table_raw);
 		if($table_count < 4) die('Minimum two points required');
 		for($i = 0; $i < $table_count - 1; $i+=2){
 			$table[$i/2] = array(floatval($table_raw[$i]), floatval($table_raw[$i+1]));
 		}
-		$table_token = md5($_REQUEST['table']);
+		$table_token = md5($table_req);
 		usort($table, 'first_element_comparator');
 	}
 	
