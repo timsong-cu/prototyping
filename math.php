@@ -1,4 +1,7 @@
 <?php
+/**
+ * Contains various math functions used during calculations. 
+ */
 
 define('FPMIN', '1.0e-30');
 
@@ -146,5 +149,20 @@ function betacf($a, $b, $x){
 	}
 	if ($m > 100) die("a or b too big, or MAXIT too small in betacf");
 	return $h;
+}
+
+function poisson_pmf($mean, $x){
+	$lnprob = log($mean) * $x - $mean - lnfact($x);
+	return exp($lnprob);
+}
+
+function negativebinomial_pmf($mean, $size, $x){
+	$prob = $size / ($size + $mean);
+	
+	// pmf = (Gamma(size + x) / Gamma(size) / x!) * p^size * (1-p)^x
+	// lnpmf = lngamma(size + x) - lngamma(size) - lngamma(x+1)  + size * ln(p) + x* ln(1-p)
+	
+	$lnpmf = lngamma($size + $x) - lngamma($size) - lnfact($x) + $size * log($prob) + $x * log(1 - $prob);
+	return exp($lnpmf);
 }
 ?>

@@ -62,10 +62,11 @@ function doplot(){
 		var sequencecost = get_value("sequencecost");
 		var cutoff = get_value("cutoff");
 		var frequency = get_value("frequency");
+		var controlcoverage = get_value("controlcoverage");
 		url += "&minreads=" + encodeURIComponent(minreads) + "&controls=" + encodeURIComponent(controls)
 			+ "&cutoff=" + encodeURIComponent(cutoff) + "&budget=" + encodeURIComponent(budget) 
 			+ "&overhead=" + encodeURIComponent(overhead) + "&sequencecost=" + encodeURIComponent(sequencecost);
-		url += "&frequency=" + encodeURIComponent(frequency);
+		url += "&frequency=" + encodeURIComponent(frequency) + "&controlcoverage=" + encodeURIComponent(controlcoverage);
 	}
 	else if(action == "power-from-control-frequency"){
 		var minreads = get_value("minreads");
@@ -200,6 +201,7 @@ function onactionchange(){
 		else if (action == "power-from-case-frequency"){
 			newhtml +=  
 				generate_input_tag("controls", "Number of controls: ") +
+				generate_input_tag("controlcoverage", "Depth coverage of controls, in 1X diploid coverage (leave blank for complete coverage): ") +
 				generate_input_tag("budget", "Budget (if more than one, separate by space or comma): $") +
 				generate_input_tag("overhead", "Overhead cost per sample: $") +
 				generate_input_tag("sequencecost", "Cost of sequencing per 1X diploid genome: $") +

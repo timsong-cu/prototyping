@@ -1,4 +1,7 @@
 <?php
+/**
+ * Contains functions necessary to support action=plot and action=data.
+ */
 require_once('plotbase.php');
 require_once('plottingfunctions.php');
 require_once('util.php');
@@ -62,6 +65,7 @@ function get_plot_data(){
 	else $ratio = floatval($ratio);
 	$freq = preg_split('/[\s,]+/', strval($_REQUEST['frequency']));
 	$oddsratio = floatval($_REQUEST['oddsratio']);
+	$controlcoverage = floatval($_REQUEST['controlcoverage']);
 	
 	if($mean <= 0) $mean = PLOT_DEFAULT_MEAN;
 	if($size <= 0) $size = PLOT_DEFAULT_SIZE;
@@ -72,6 +76,7 @@ function get_plot_data(){
 	if($sequencecost <= 0) $sequencecost = PLOT_DEFAULT_SEQUENCECOST;
 	if($ratio <= 0) $ratio = PLOT_DEFAULT_RATIO;
 	if($oddsratio <= 0) $oddsratio = PLOT_DEFAULT_ODDSRATIO;
+	if($controlcoverage <= 0) $controlcoverage = -1; // = 100% power for controls
 	
 	if(isset($_REQUEST['usesavedtable'])){
 		if(!isset($_SESSION['table'])) die("No table saved in session!");
@@ -108,7 +113,9 @@ function get_plot_data(){
 		usort($table, 'first_element_comparator');
 	}
 	
-	// set parameters based on distribution and calculation to perform 
+	
+	// set parameters based on distribution and calculation to perform
+	// and generate axis titles based on the parametes
 	if($calculation == 'distribution'){
 		$xtitle = 'Depth-coverage(x)';
 		$ytitle = 'Proportion';
@@ -124,7 +131,7 @@ function get_plot_data(){
 		}
 	}
 	else if ($calculation == 'power'){
-		$xtitle = 'Average number of reads';
+		$xtitle = 'Average depth-coverage';
 		$ytitle = 'Power to detect variant';
 		if($distribution == 'poisson'){
 			$charttitle = "Power to detect variant\n(Poisson, minimum $minreads read".(($minreads > 1) ? 's)' : ')');
@@ -196,25 +203,25 @@ function get_plot_data(){
 		$ytitle = 'Power';
 	
 		if($distribution == 'poisson'){
-			$args = compact('minreads', 'cutoff', 'controls', 'distribution', 'sequencecost', 'overhead');
+			$args = compact('minreads', 'cutoff', 'controls', 'distribution', 'sequencecost', 'overhead', 'controlcoverage');
 			$charttitle = sprintf("Power of experiment\n"
 			. "(Poisson, minimum $minreads read(s), cost per sample $overhead, \ncost per genome $sequencecost, "
-			. "$controls controls, cutoff=%f,\ncalculated from frequency of variant in cases)", $cutoff);
-			$params = implode('_', array($function, $minreads, $cutoff, 'BUDGET', $controls, $sequencecost, $overhead));
+			. "$controls controls" . ($controlcoverage == -1? ',' : "($controlcoverage" . 'X),') ." cutoff=%f,\ncalculated from frequency of variant in cases)", $cutoff);
+			$params = implode('_', array($function, $minreads, $cutoff, 'BUDGET', $controls, $sequencecost, $overhead, $controlcoverage));
 		}
 		else if ($distribution == 'negativebinomial'){
-			$args = compact('minreads', 'cutoff', 'controls', 'size', 'distribution', 'sequencecost', 'overhead');
+			$args = compact('minreads', 'cutoff', 'controls', 'size', 'distribution', 'sequencecost', 'overhead', 'controlcoverage');
 			$charttitle = sprintf("Power of experiment\n"
 			. "(Negative binomial, dispersion parameter $size, minimum $minreads read(s), \ncost per sample $overhead, cost per genome $sequencecost, "
-			. "$controls controls, \ncutoff=%f, calculated from frequency of variant in cases)", $cutoff);
-			$params = implode('_', array($function, $minreads, $cutoff, 'BUDGET', $controls, $size, $sequencecost, $overhead));
+			. "$controls controls" . ($controlcoverage == -1? ',' : "($controlcoverage" . 'X),') . "\ncutoff=%f, calculated from frequency of variant in cases)", $cutoff);
+			$params = implode('_', array($function, $minreads, $cutoff, 'BUDGET', $controls, $size, $sequencecost, $overhead, $controlcoverage));
 		}
 		else if($distribution == 'table'){
-			$args = compact('cutoff', 'controls', 'distribution', 'sequencecost', 'overhead', 'table');
+			$args = compact('cutoff', 'controls', 'distribution', 'sequencecost', 'overhead', 'table', 'controlcoverage');
 			$charttitle = sprintf("Power of experiment\n"
 			. "(Table, cost per sample $overhead, \ncost per genome $sequencecost, "
-			. "$controls controls, cutoff=%f,\ncalculated from frequency of variant in cases)", $cutoff);
-			$params = implode('_', array($function, $cutoff, 'BUDGET', $controls, $sequencecost, $overhead, $table_token));
+			. "$controls controls" . ($controlcoverage == -1? ',' : "($controlcoverage" . 'X),') . " cutoff=%f,\ncalculated from frequency of variant in cases)", $cutoff);
+			$params = implode('_', array($function, $cutoff, 'BUDGET', $controls, $sequencecost, $overhead, $controlcoverage, $table_token));
 			
 		}
 	}
@@ -301,25 +308,21 @@ function get_plot_data(){
 	if($calculation == 'distribution'){
 		$xstart = intval($xfrom > 0 ? $xfrom : 0);
 		$xend = intval($xto > 0 ? $xto : PLOT_RANGE_AUTO);
-		$data = getdata($params, $function, $args, $xstart, $xend, $step);
+		$data = get_data($params, $function, $args, $xstart, $xend, $step);
 	}
 	else if($calculation == 'power'){
 		$xstart = floatval($xfrom >= 0 ? $xfrom : 0);
 		$xend = floatval($xto > $xfrom && $xto > 0 ? $xto : PLOT_RANGE_AUTO);
-		$data = getdata($params, $function, $args, $xstart, $xend, $step);
+		$data = get_data($params, $function, $args, $xstart, $xend, $step);
 	}
 	else if($calculation == 'mincarrier' || $calculation == 'mincarrier_both'){
 		$xstart = intval($xfrom > 1 ? $xfrom : 1);
 		foreach($budget as $budg){
 			$budg = intval($budg);
-			if($budg < 0) continue;
-			if($overhead > 0)
-				$xend = intval($xto >= 1 && $xto <= $budg / $overhead ? $xto : PLOT_RANGE_AUTO);
-			else
-				$xend = intval($xto >= 1 && $xto <= $budg / $sequencecost ? $xto : PLOT_RANGE_AUTO);
+			$xend = $xto >= $xstart ? $xto : PLOT_RANGE_AUTO;
 			$args['budget'] = $budg;
 			$para = str_replace('BUDGET', strval($budg), $params);
-			$data_t = getdata($para, $function, $args, $xstart, $xend, $step);
+			$data_t = get_data($para, $function, $args, $xstart, $xend, $step);
 			$data[] = array('y' => $data_t[0], 'x' => $data_t[1], 'legend' => "budget = $budg");
 		}
 	}
@@ -336,13 +339,10 @@ function get_plot_data(){
 			foreach($budget as $budg){
 				$budg = floatval($budg);
 				if($budg < 0) continue;
-				if($overhead > 0)
-					$xend = intval($xto >= 1 && $xto <= $budg / $overhead ? $xto : PLOT_RANGE_AUTO);
-				else
-					$xend = intval($xto >= 1 && $xto <= $budg / $sequencecost ? $xto : PLOT_RANGE_AUTO);
+				$xend = $xto >= $xstart ? $xto : PLOT_RANGE_AUTO;
 				$args['budget'] = $budg;
 				$para = str_replace('BUDGET', strval($budg), $para1);
-				$data_t = getdata($para, $function, $args, $xstart, $xend, $step);
+				$data_t = get_data($para, $function, $args, $xstart, $xend, $step);
 				$data[] = array('y' => $data_t[0], 'x' => $data_t[1], 'legend' => "f = $frequency, budget = $budg");
 			}
 		}

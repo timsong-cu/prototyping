@@ -1,8 +1,10 @@
 <?php
 require_once('math.php');
 
-define('PLOT_RANGE_AUTO', '-1');
-define('PLOT_DISCARD', '0xFFFF');
+define('PLOT_RANGE_AUTO', -1);
+define('PLOT_DISCARD', 0xFFFF);
+define('MAXIMUM_CACHE_SIZE', 100); // maximum number of cache files.
+define('CACHE_SIZE', 70); // number of cache files that should remain after cleanup.
 
 function get_mincount($controls, $total, $numberincontrols, $cutoff){
 /*
@@ -39,7 +41,7 @@ function get_mincount($controls, $total, $numberincontrols, $cutoff){
  * @param $xend Where to end plotting. Set PLOT_RANGE_AUTO to end on a plateau.
  * @param $step The difference between x-coordinates of two adjacent data points.
  */
-function getdata($params, $function, $args, $xstart, $xend, $step, $nocache = false){
+function get_data($params, $function, $args, $xstart, $xend, $step, $nocache = false){
 	$hash = md5($params);
 	if(!file_exists("cache/$hash") || $nocache)
 		$cache = array();
@@ -115,15 +117,24 @@ function getdata($params, $function, $args, $xstart, $xend, $step, $nocache = fa
 			}
 			if($result == PLOT_DISCARD)
 				continue;
-			$cache[strval($x)] = $result;
-			
 			$datax[$index] = $x;
 			$datay[$index] = $result;
 			$index ++; 
 		}
 	}
 	@file_put_contents("cache/$hash", serialize($cache));
+	@maintain_cache();
 	return array($datay, $datax);
+}
+
+function maintain_cache(){
+	$files = scandir('./cache');
+	array_splice($files, 0, 2); //remove . and ..
+	if(count($files) <= MAXIMUM_CACHE_SIZE)
+		return; //nothing to be done here
+	usort($files, 'filetime_comparator');
+	for($i = 0; $i < count($files) - CACHE_SIZE; $i++)
+		@unlink('cache/'.$files[$i]); // remove the oldest files.	
 }
 
 function array_bsearch( $needle, $haystack, $comparator , &$probe )
@@ -165,5 +176,14 @@ function array_bsearch( $needle, $haystack, $comparator , &$probe )
 
 function first_element_comparator($first, $second){
 	return $first[0] - $second[0];	
+}
+
+function filetime_comparator($first, $second){
+	$firsttime = @filemtime("cache/$first");
+	$secondtime = @filemtime("cache/$second");
+	if(!$firsttime && !$secondtime) return 0; // if neither exists, they are equal
+	else if(!$firsttime) return -1; //otherwise the nonexistent file is smaller
+	else if(!$secondtime) return 1;
+	else return $firsttime - $secondtime; //otherwise the file modified (and thus accessed) earlier is smaller.
 }
 ?>

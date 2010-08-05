@@ -1,4 +1,7 @@
 <?php
+/**
+ * Main program.
+ */
 require_once('plot.php');
 
 session_start();
@@ -52,7 +55,8 @@ function print_default(){
 	'controls': <?php echo PLOT_DEFAULT_CONTROLS;?>,
 	'overhead': <?php echo PLOT_DEFAULT_OVERHEAD;?>,
 	'sequencecost': <?php echo PLOT_DEFAULT_SEQUENCECOST;?>,
-	'cutoff': <?php echo PLOT_DEFAULT_CUTOFF;?>
+	'cutoff': <?php echo PLOT_DEFAULT_CUTOFF;?>,
+	'controlcoverage': 'infinite'
 	};
 <?php
 }

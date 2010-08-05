@@ -1,7 +1,21 @@
-<?php 
-require_once('util.php');
-require_once('distributions.php');
+<?php
 
+/**
+ * This file contains functions used to compute individual data points in the plot.
+ */ 
+require_once('util.php');
+
+define('CONTROL_FREQUENCY_DEFAULT', 0.005);
+
+function poisson_distribution($args, $x){
+	extract($args);
+	return poisson_pmf($mean, $x);	
+}
+
+function negativebinomial_distribution($args, $x){
+	extract($args);
+	return negativebinomial_pmf($mean, $size, $x);
+}
 function distribution($args, $x){
 	extract($args);
 	$distribution .= "_distribution";
@@ -97,7 +111,24 @@ function power_from_case_frequency($args, $count){
 	$power = power($args, $mean);
 	$mincount = get_mincount($controls, $count, 0, $cutoff);
 	if($mincount == -1 || $power <= 0) return PLOT_DISCARD;
-	$ret = 1 - binomial_cdf($count, $frequency * $power, $mincount);
+	if($controlcoverage == -1)
+		$ret = 1 - binomial_cdf($count, $frequency * $power, $mincount);
+	else{
+		$power_control = power($args, $controlcoverage);
+		$limit = $controls * CONTROL_FREQUENCY_DEFAULT + sqrt($controls * CONTROL_FREQUENCY_DEFAULT * (1 - CONTROL_FREQUENCY_DEFAULT)) * 5;
+		$expected = $controls * CONTROL_FREQUENCY_DEFAULT;
+		$totalprob = 0;
+		for($i = 0; $i < 1000 && $i < $limit; $i++){ // iterate over the number of actual carriers in controls.
+			$mincount = get_mincount($controls, $count, $i, $cutoff);
+			if($mincount == -1) break;
+			$powi = 1 - binomial_cdf($count, $frequency * $power, $mincount);
+			$probi = binomial_pmf($i, $power_control, 0) * binomial_pmf($controls, CONTROL_FREQUENCY_DEFAULT, $i); 
+			$totalprob += $probi;
+			$ret += $powi * $probi;
+			if($i > $expected && $probi < 0.0001) break;
+		}
+		$ret /= $totalprob; //normalize
+	}
 	return $ret >= 0? $ret : 0;
 }
 
@@ -112,9 +143,22 @@ function power_from_case_frequency_both($args, $count){
 	$power = power($args, $mean);
 	$mincount = get_mincount($controls, $cases, 0, $cutoff);
 	if($mincount == -1 || $power <= 0) return PLOT_DISCARD;
-	$ret = 1 - binomial_cdf($cases, $frequency * $power, $mincount);
+	$limit = $controls * CONTROL_FREQUENCY_DEFAULT + sqrt($controls * CONTROL_FREQUENCY_DEFAULT * (1 - CONTROL_FREQUENCY_DEFAULT)) * 5;
+	$expected = $controls * CONTROL_FREQUENCY_DEFAULT;
+	$totalprob = 0;
+	for($i = 0; $i < 1000 && $i < $limit; $i++){ // iterate over the number of actual carriers in controls.
+		$mincount = get_mincount($controls, $cases, $i, $cutoff);
+		if($mincount == -1) break;
+		$powi = 1 - binomial_cdf($cases, $frequency * $power, $mincount);
+		$probi = binomial_pmf($i, $power, 0) * binomial_pmf($controls, CONTROL_FREQUENCY_DEFAULT, $i); 
+		$totalprob += $probi;
+		$ret += $powi * $probi;
+		if($i > $expected && $probi < 0.0001) break;
+	}
+	$ret /= $totalprob; //normalize
 	return $ret >= 0? $ret : 0;
 }
+
 function power_from_control_frequency($args, $count){
 	extract($args);
 	$available = $budget - $overhead * $count;
@@ -125,7 +169,7 @@ function power_from_control_frequency($args, $count){
 	$mincount = get_mincount($controls, $count, 0, $cutoff);
 	if($mincount == -1 || $power <= 0) return PLOT_DISCARD;
 	$ret = 0;
-	$limit = $controls * $frequency + sqrt($controls * $frequency * (1 - $frequncy)) * 5;
+	$limit = $controls * $frequency + sqrt($controls * $frequency * (1 - $frequency)) * 5;
 	$expected = $controls * $frequency;
 	for($i = 0; $i < 1000 && $i < $limit; $i++){
 		$mincount = get_mincount($controls, $count, $i, $cutoff);
@@ -151,7 +195,7 @@ function power_from_control_frequency_both($args, $count){
 	$mincount = get_mincount($controls, $cases, 0, $cutoff);
 	if($mincount == -1 || $power <= 0) return PLOT_DISCARD;
 	$ret = 0;
-	$limit = $controls * $frequency + sqrt($controls * $frequency * (1 - $frequncy)) * 5;
+	$limit = $controls * $frequency + sqrt($controls * $frequency * (1 - $frequency)) * 5;
 	$expected = $controls * $frequency;
 	for($i = 0; $i < 1000 && $i < $limit; $i++){
 		$mincount = get_mincount($controls, $cases, $i, $cutoff);
@@ -161,6 +205,7 @@ function power_from_control_frequency_both($args, $count){
 		$ret += $powi * $probi;
 		if($i > $expected && $probi < 0.001) break;
 	}
+
 	return $ret >= 0? $ret : 0;
 }
 

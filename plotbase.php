@@ -1,4 +1,7 @@
 <?php
+/**
+ * Contains functions responsible for actually generating the plot using jpgraph.
+ */
 require_once('jpgraph/jpgraph.php');
 require_once('jpgraph/jpgraph_bar.php');
 require_once('jpgraph/jpgraph_line.php');
